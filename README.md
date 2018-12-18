@@ -7,3 +7,7 @@ project.
 
 gorex uses Go modules and requires >= Go v1.11.
 
+## References
+
+[rexos](https://www.rexos.org)
+[REX](https://rex.robotic-eyes.com)
