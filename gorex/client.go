@@ -24,6 +24,13 @@ type RexClient struct {
 	httpClient *http.Client // The actual net client
 }
 
+// HTTPClient is an interface which is used to perform the actual
+// REX request. This interface should be used for any REX API call.
+// The RexClient is implementing this interface and performs the actual call.
+type HTTPClient interface {
+	Send(req *http.Request) (*http.Response, error)
+}
+
 // NewRexClient returns a new instance of a RexClient
 func NewRexClient(baseURL string) *RexClient {
 
@@ -88,4 +95,13 @@ func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) 
 
 	err = json.Unmarshal(body, &c.Token)
 	return &c.Token, err
+}
+
+// Send fullfills the HTTPClient interface and performs a REX web request.
+// Makes sure that the authentication token is available
+func (c *RexClient) Send(req *http.Request) (*http.Response, error) {
+
+	req.Header.Add("accept", "application/json")
+	c.Token.SetAuthHeader(req)
+	return c.httpClient.Do(req)
 }
