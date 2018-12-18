@@ -28,6 +28,7 @@ type RexClient struct {
 // REX request. This interface should be used for any REX API call.
 // The RexClient is implementing this interface and performs the actual call.
 type HTTPClient interface {
+	GetBaseURL() string
 	Send(req *http.Request) (*http.Response, error)
 }
 
@@ -104,4 +105,9 @@ func (c *RexClient) Send(req *http.Request) (*http.Response, error) {
 	req.Header.Add("accept", "application/json")
 	c.Token.SetAuthHeader(req)
 	return c.httpClient.Do(req)
+}
+
+// GetBaseURL returns the REX base URL
+func (c *RexClient) GetBaseURL() string {
+	return c.baseURL
 }
