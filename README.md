@@ -40,7 +40,7 @@ you logged into REX.
 	clientID := "client id"
 	clientSecret := "client secret"
 
-    // Create a new client instance
+	// Create a new client instance
 	cli := gorex.NewRexClient(baseURL)
 
 	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
