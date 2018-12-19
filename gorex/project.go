@@ -153,7 +153,7 @@ func (p Project) String() string {
 
 	for i, f := range p.Embedded.ProjectFiles {
 		length := min(35, len(f.Name))
-		s += fmt.Sprintf("| %3d | %-35s | %8d (kb) | %s |\n", i, f.Name[0:length], f.FileSize, f.LastModified)
+		s += fmt.Sprintf("| %3d | %-35s | %8d (kb) | %s |\n", i, f.Name[0:length], f.FileSize/1024, f.LastModified)
 	}
 	s += fmt.Sprintf("|------------------------------------------------------------------------------------------|\n")
 

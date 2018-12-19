@@ -46,4 +46,15 @@ func main() {
 	}
 
 	fmt.Println(project)
+
+	// Add project file
+	r, _ := os.Open("/tmp/test.rex")
+	defer r.Close()
+
+	ft := gorex.NewFileTransform()
+
+	err = projectService.UploadProjectFile(*project, "testProjectFile", "test.rex", ft, r)
+	if err != nil {
+		fmt.Println("Cannot upload file", err)
+	}
 }
