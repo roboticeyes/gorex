@@ -20,7 +20,8 @@ var (
 type UserService interface {
 	GetCurrentUser() (*User, error)
 	GetTotalNumberOfUsers() (uint64, error)
-	GetUserByEmail(email string) (*User, error)
+	FindUserByEmail(email string) (*User, error)
+	FindUserByUserID(userID string) (*User, error)
 }
 
 type userService struct {
@@ -63,8 +64,24 @@ func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
 	return gjson.Get(string(body), "page.totalElements").Uint(), nil
 }
 
-// GetUserByEmail retrieves the user information based on a given email address
-func (s *userService) GetUserByEmail(email string) (*User, error) {
+// FindUserByUserID returns the user information for a given user ID
+// Requires admin permissions!
+func (s *userService) FindUserByUserID(userID string) (*User, error) {
+
+	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiFindByID+userID, nil)
+
+	body, err := s.client.Send(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var user User
+	err = json.Unmarshal(body, &user)
+	return &user, nil
+}
+
+// FindUserByEmail retrieves the user ID of a given email address
+func (s *userService) FindUserByEmail(email string) (*User, error) {
 
 	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiFindByEmail+email, nil)
 
@@ -80,13 +97,5 @@ func (s *userService) GetUserByEmail(email string) (*User, error) {
 	if err != nil || user.UserID == "" {
 		return &User{}, errors.New("User not found")
 	}
-
-	// Fetch actual user information based on the retrieved UserID
-	req, _ = http.NewRequest("GET", s.client.GetBaseURL()+apiFindByID+user.UserID, nil)
-	body, err = s.client.Send(req)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(body, &user)
 	return &user, nil
 }
