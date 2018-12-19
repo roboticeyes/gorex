@@ -7,9 +7,10 @@ import (
 
 func TestCreateWithClientIdAndSecret(t *testing.T) {
 
-	baseURL := "https://rex-test.robotic-eyes.com"
+	apiURL := "https://rex-test.robotic-eyes.com/rex-gateway/api/v2"
+	tokenURL := "https://rex-test.robotic-eyes.com/"
 
-	cli := NewRexClient(baseURL)
+	cli := NewRexClient(tokenURL, apiURL, apiURL)
 
 	if cli == nil {
 		t.Error("Cannot create RexClient")
@@ -30,10 +31,11 @@ func TestCreateWithClientIdAndSecret(t *testing.T) {
 
 func TestCreateWithToken(t *testing.T) {
 
-	baseURL := "https://rex-test.robotic-eyes.com"
+	apiURL := "https://rex-test.robotic-eyes.com/rex-gateway/api/v2"
+	tokenURL := "https://rex-test.robotic-eyes.com/"
 	var token oauth2.Token
 
-	cli := NewRexClient(baseURL)
+	cli := NewRexClient(tokenURL, apiURL, apiURL)
 	err := cli.ConnectWithToken(token)
 
 	if err != nil {

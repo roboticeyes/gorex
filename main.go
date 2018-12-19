@@ -19,7 +19,9 @@ func main() {
 	}
 
 	// Setup REX client connection
-	cli := gorex.NewRexClient(baseURL)
+	apiURL := baseURL + "/rex-gateway/api/v2"
+	tokenURL := baseURL
+	cli := gorex.NewRexClient(tokenURL, apiURL, apiURL)
 
 	_, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
 	if err != nil {

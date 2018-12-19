@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	apiCurrentUser = "/api/v2/users/current"
-	apiUsers       = "/api/v2/users"
-	apiFindByEmail = "/api/v2/users/search/findUserIdByEmail?email="
-	apiFindByID    = "/api/v2/users/search/findByUserId?userId="
+	apiCurrentUser = "/users/current"
+	apiUsers       = "/users"
+	apiFindByEmail = "/users/search/findUserIdByEmail?email="
+	apiFindByID    = "/users/search/findByUserId?userId="
 )
 
 // UserService provides the calls for accessing REX user resource
@@ -38,7 +38,7 @@ func NewUserService(client HTTPClient) UserService {
 // The current user is the one which has been identified by the authentication token.
 func (s *userService) GetCurrentUser() (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiCurrentUser, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiCurrentUser, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *userService) GetCurrentUser() (*User, error) {
 // Requires admin permissions!
 func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiUsers, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiUsers, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
 // Requires admin permissions!
 func (s *userService) FindUserByUserID(userID string) (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiFindByID+userID, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiFindByID+userID, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s *userService) FindUserByUserID(userID string) (*User, error) {
 // FindUserByEmail retrieves the user ID of a given email address
 func (s *userService) FindUserByEmail(email string) (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetBaseURL()+apiFindByEmail+email, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiFindByEmail+email, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {

@@ -18,7 +18,9 @@ var (
 
 // RexClient contains the necessary data for a RexClient
 type RexClient struct {
-	baseURL string
+	tokenURL   string
+	authURL    string
+	projectURL string
 
 	Token      oauth2.Token // Contains the authentication token
 	httpClient *http.Client // The actual net client
@@ -28,24 +30,30 @@ type RexClient struct {
 // REX request. This interface should be used for any REX API call.
 // The RexClient is implementing this interface and performs the actual call.
 type HTTPClient interface {
-	GetBaseURL() string
+	GetTokenURL() string
+	GetAuthURL() string
+	GetProjectURL() string
 	Send(req *http.Request) ([]byte, error)
 }
 
 // NewRexClient returns a new instance of a RexClient
-func NewRexClient(baseURL string) *RexClient {
+func NewRexClient(tokenURL, authURL, projectURL string) *RexClient {
 
 	return &RexClient{
-		baseURL:    baseURL,
+		tokenURL:   tokenURL,
+		authURL:    authURL,
+		projectURL: projectURL,
 		httpClient: http.DefaultClient,
 	}
 }
 
 // NewRexClientWithToken returns a new instance of a RexClient with a given token
-func NewRexClientWithToken(baseURL string, token oauth2.Token) *RexClient {
+func NewRexClientWithToken(tokenURL, authURL, projectURL string, token oauth2.Token) *RexClient {
 
 	return &RexClient{
-		baseURL:    baseURL,
+		tokenURL:   tokenURL,
+		authURL:    authURL,
+		projectURL: projectURL,
 		Token:      token,
 		httpClient: http.DefaultClient,
 	}
@@ -66,7 +74,7 @@ func (c *RexClient) ConnectWithToken(token oauth2.Token) error {
 // Returns nil if connection was ok, else returns the proper error
 func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) (*oauth2.Token, error) {
 
-	req, err := http.NewRequest("POST", c.baseURL+apiAuth, strings.NewReader("grant_type=client_credentials"))
+	req, err := http.NewRequest("POST", c.tokenURL+apiAuth, strings.NewReader("grant_type=client_credentials"))
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +125,17 @@ func (c *RexClient) Send(req *http.Request) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-// GetBaseURL returns the REX base URL
-func (c *RexClient) GetBaseURL() string {
-	return c.baseURL
+// GetProjectURL returns the REX base URL for the project resource
+func (c *RexClient) GetProjectURL() string {
+	return c.projectURL
+}
+
+// GetAuthURL returns the REX base URL for the authentication resource
+func (c *RexClient) GetAuthURL() string {
+	return c.authURL
+}
+
+// GetTokenURL returns the REX base URL for the token authentication
+func (c *RexClient) GetTokenURL() string {
+	return c.tokenURL
 }
