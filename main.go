@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/roboticeyes/gorex/gorex"
+	"log"
 	"os"
 )
 
@@ -13,21 +14,31 @@ func main() {
 	clientID := os.Getenv("REX_CLIENT_ID")
 	clientSecret := os.Getenv("REX_CLIENT_SECRET")
 
+	if len(baseURL) == 0 {
+		log.Fatal("Please set REX_BASEURL")
+	}
+
+	// Setup REX client connection
 	cli := gorex.NewRexClient(baseURL)
 
-	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
-	if token == nil {
-		fmt.Println("Token is not retrieved")
-	}
+	_, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
 	if err != nil {
-		fmt.Println("Error during connection")
+		log.Fatal("Error during connection", err)
 	}
 
-	// Project service
+	// Setup services
+
 	projectService := gorex.NewProjectService(cli)
+	userService := gorex.NewUserService(cli)
+
+	user, err := userService.GetCurrentUser()
+	if err != nil {
+		fmt.Println("Cannot get user", err)
+	}
+	fmt.Println(user)
 
 	name := "test"
-	owner := "fb1b3be2-1783-4aa8-9ed4-b0d118b80fac"
+	owner := user.UserID
 	project, err := projectService.FindByNameAndOwner(name, owner)
 
 	if err != nil {

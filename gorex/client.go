@@ -29,7 +29,7 @@ type RexClient struct {
 // The RexClient is implementing this interface and performs the actual call.
 type HTTPClient interface {
 	GetBaseURL() string
-	Send(req *http.Request) (*http.Response, error)
+	Send(req *http.Request) ([]byte, error)
 }
 
 // NewRexClient returns a new instance of a RexClient
@@ -98,13 +98,23 @@ func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) 
 	return &c.Token, err
 }
 
-// Send fullfills the HTTPClient interface and performs a REX web request.
-// Makes sure that the authentication token is available
-func (c *RexClient) Send(req *http.Request) (*http.Response, error) {
+// Send performs the actual HTTP call and reads the full response into a byte array which
+// will be returned in case of success. Make sure that the proper token is set before making this call
+func (c *RexClient) Send(req *http.Request) ([]byte, error) {
 
 	req.Header.Add("accept", "application/json")
 	c.Token.SetAuthHeader(req)
-	return c.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+	// this is required to properly empty the buffer for the next call
+	defer func() {
+		io.Copy(ioutil.Discard, resp.Body)
+	}()
+
+	return ioutil.ReadAll(resp.Body)
 }
 
 // GetBaseURL returns the REX base URL

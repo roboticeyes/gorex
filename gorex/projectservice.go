@@ -2,42 +2,55 @@ package gorex
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 )
 
 var (
-	queryNameAndOwner = "/api/v2/projects/search/findByNameAndOwner?"
+	queryByNameAndOwner = "/api/v2/projects/search/findByNameAndOwner?"
+	queryByOwner        = "/api/v2/projects/search/findAllByOwner?owner="
 )
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
+	FindAllByOwner(owner string) ([]Project, error)
 	FindByNameAndOwner(name, owner string) (*Project, error)
 }
 
-type service struct {
+type projectService struct {
 	client HTTPClient
 }
 
-// NewProjectService creates a new project service
+// NewProjectService creates a new project projectService
 func NewProjectService(client HTTPClient) ProjectService {
-	return &service{client}
+	return &projectService{client}
 }
 
-func (s *service) FindByNameAndOwner(name, owner string) (*Project, error) {
+// FindByNameAndOwner returns the unique identified project by userId and project name
+func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error) {
 
-	query := s.client.GetBaseURL() + queryNameAndOwner + "name=" + name + "&owner=" + owner
+	query := s.client.GetBaseURL() + queryByNameAndOwner + "name=" + name + "&owner=" + owner
 	req, _ := http.NewRequest("GET", query, nil)
-	resp, err := s.client.Send(req)
+	body, err := s.client.Send(req)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		io.Copy(ioutil.Discard, resp.Body)
-	}()
 
 	var project Project
-	err = json.NewDecoder(resp.Body).Decode(&project)
+	err = json.Unmarshal(body, &project)
 	return &project, err
+}
+
+// FindByNameAndOwner returns the unique identified project by userId and project name
+func (s *projectService) FindAllByOwner(owner string) ([]Project, error) {
+
+	query := s.client.GetBaseURL() + queryByOwner + owner
+	req, _ := http.NewRequest("GET", query, nil)
+	body, err := s.client.Send(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var projects []Project
+	err = json.Unmarshal(body, &projects)
+	return projects, err
 }
