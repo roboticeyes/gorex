@@ -51,30 +51,30 @@ You also often need your `userId` which can be found [here](https://rex.robotic-
 you logged into REX.
 
 ```go
-	baseURL := "https://rex.robotic-eyes.com"
-	clientID := "your client id"
-	clientSecret := "your client secret"
+baseURL := "https://rex.robotic-eyes.com"
+clientID := "your client id"
+clientSecret := "your client secret"
 
-	// Create a new client instance
-	cli := gorex.NewRexClient(baseURL)
+// Create a new client instance
+cli := gorex.NewRexClient(baseURL)
 
-	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
-	if err != nil {
-		fmt.Println("Error during connection", err)
-	}
+token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
+if err != nil {
+	fmt.Println("Error during connection", err)
+}
 
-	// Create a new project service
-	projectService := gorex.NewProjectService(cli)
+// Create a new project service
+projectService := gorex.NewProjectService(cli)
 
-	name := "your project name to look for"
-	owner := "your user id"
-	project, err := projectService.FindByNameAndOwner(name, owner)
+name := "your project name to look for"
+owner := "your user id"
+project, err := projectService.FindByNameAndOwner(name, owner)
 
-	if err != nil {
-		fmt.Println("Cannot get project", err)
-	}
+if err != nil {
+	fmt.Println("Cannot get project", err)
+}
 
-	fmt.Println(project)
+fmt.Println(project)
 
 ```
 ## References
