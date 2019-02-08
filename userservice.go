@@ -5,6 +5,7 @@ package gorex
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/tidwall/gjson"
 	"net/http"
 )
@@ -47,6 +48,9 @@ func (s *userService) GetCurrentUser() (*User, error) {
 
 	var u User
 	err = json.Unmarshal(body, &u)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get user: %s", err)
+	}
 	u.SelfLink = u.Links.User.Href // assign self link
 	return &u, err
 }

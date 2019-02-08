@@ -6,6 +6,27 @@ import (
 	"fmt"
 )
 
+// ProjectSimple is the basic structure representing a simple RexProject
+type ProjectSimple struct {
+	ID    string // auto-generated after getting the list of projects
+	Name  string `json:"name"`
+	Owner string `json:"owner"`
+	Links struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+	} `json:"_links"`
+}
+
+// ProjectSimpleList is a list ProjectSimple objects.
+//
+// Mainly required for JSON encoding/decoding
+type ProjectSimpleList struct {
+	Embedded struct {
+		Projects []ProjectSimple `json:"projects"`
+	} `json:"_embedded"`
+}
+
 // Project is the structure of a REX project
 type Project struct {
 	DateCreated string `json:"dateCreated"`

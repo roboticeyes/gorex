@@ -61,15 +61,6 @@ func NewRexClientWithToken(tokenURL, authURL, projectURL string, token oauth2.To
 	}
 }
 
-// ConnectWithToken stores and validates the token for later usage
-func (c *RexClient) ConnectWithToken(token oauth2.Token) error {
-	c.Token = token
-
-	// TODO validate token
-
-	return nil
-}
-
 // ConnectWithClientCredentials performs a netowrk to the rexos backend, and retrieves
 // the authentication token (stores it internally) using the given clientID and clientSecret
 //
