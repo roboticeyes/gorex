@@ -33,9 +33,14 @@ import (
 )
 ```
 
-## CLI
+## rxc
 
-You can easily build the sample `cli` command line toole by `go build cmd/cli/*.go`.
+`rxc` is a command line tool to work with rexOS on your command line. You can build the  `rxc` command line toole by
+
+```go
+cd cmd/rxc
+go build
+```
 
 ## Register an account
 
