@@ -1,8 +1,10 @@
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
 package main
 
 import (
 	"fmt"
-	"github.com/roboticeyes/gorex/gorex"
+	"github.com/roboticeyes/gorex"
 	"log"
 	"os"
 )

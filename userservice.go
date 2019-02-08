@@ -1,4 +1,4 @@
-// Copyright 2018 Bernhard Reitinger. All rights reserved.
+// Copyright 2019 Robotic Eyes. All rights reserved.
 
 package gorex
 

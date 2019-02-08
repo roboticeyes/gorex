@@ -2,8 +2,8 @@
 
 # gorex
 
-The `gorex` library provides a client implementation for the rexos API in Go. The library can easily be integrated
-into your Go project. It can help you to get started with the provided REX API.
+The `gorex` library provides a client implementation for the [rexOS](https://www.rexos.org) API in Go. The library can
+easily be integrated into your Go project. It can help you to get started with the provided REX API.
 
 ## Installation
 
@@ -15,30 +15,45 @@ First, clone the repository to your local development path, and let go download 
 go mod tidy
 ```
 
-This should download all required packages. To build the sample executable just use the attached `Makefile` and call
-`make`.
+This should download all required packages. Then you can build the library by
+
+```
+go build
+```
 
 ## Usage
 
-You can easily embed `gorex` in your target Go application by importing it as `gorex github.com/roboticeyes/gorex/gorex`
+Make sure that you just include the `gorex` library in your application:
 
+```go
+package main
 
-### Register an account
+import (
+    "github.com/roboticeyes/gorex"
+)
+```
 
+## CLI
+
+You can easily build the sample `cli` command line toole by `go build cmd/cli/*.go`.
+
+## Register an account
+
+In order to work with the rexOS you need a REX account.
 Visit [the REX registration](https://rex.robotic-eyes.com/registration/register) page and create a new account. Under
 *Settings* you need to generate a new API token. This delivers a valid `clientId` and `clientSecret` for your
 application.
 
 ### First sample
 
-For any call into rexos you need to authenticate. Make sure that you have your `clientId` and `clientSecret` available.
+For any call into rexOS you need to authenticate. Make sure that you have your `clientId` and `clientSecret` available.
 You also often need your `userId` which can be found [here](https://rex.robotic-eyes.com/rex-gateway/api/v2/users/current) after
 you logged into REX.
 
 ```go
 	baseURL := "https://rex.robotic-eyes.com"
-	clientID := "client id"
-	clientSecret := "client secret"
+	clientID := "your client id"
+	clientSecret := "your client secret"
 
 	// Create a new client instance
 	cli := gorex.NewRexClient(baseURL)
@@ -64,5 +79,5 @@ you logged into REX.
 ```
 ## References
 
-* [rexos](https://www.rexos.org)
+* [rexOS](https://www.rexos.org)
 * [REX](https://rex.robotic-eyes.com)

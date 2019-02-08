@@ -1,3 +1,5 @@
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
 package gorex
 
 // ProjectTransformation is used for the absoluteTransformation as well as for the relativeTransformation of a RexReference

@@ -1,3 +1,5 @@
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
 package gorex
 
 // Reference is a spatial anchor which can be attached to a project or a project file.

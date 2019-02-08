@@ -1,4 +1,4 @@
-// Copyright 2018 Robotic Eyes. All rights reserved.
+// Copyright 2019 Robotic Eyes. All rights reserved.
 
 // Package gorex provides a library for accessing the REX API. REX is a cloud-based operating system
 // for building augmented reality applications.
