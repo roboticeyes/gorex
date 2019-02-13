@@ -20,12 +20,12 @@ rxc - command line client for rexOS
 
 actions:
 
-  rxc help           print this help
+  rxc help               print this help
 
-  rxc login          authenticate user and retrieve auth token
+  rxc login              authenticate user and retrieve auth token
 
-  rxc ls             list all projects
-  rxc ls [project]   show details for a given project
+  rxc ls                 list all projects
+  rxc ls "project name"  show details for a given project
 `
 
 const (
@@ -33,9 +33,8 @@ const (
 )
 
 var (
-	baseURL      = "https://rex.robotic-eyes.com"
-	apiURL       = ""
-	tokenURL     = ""
+	apiURL       = "" // composed API url based on domain information
+	scURL        = "" // composed SocketCluster url based on domain information
 	clientID     = ""
 	clientSecret = ""
 	rexClient    *gorex.RexClient
@@ -44,8 +43,9 @@ var (
 
 func init() {
 
-	if os.Getenv("REX_BASEURL") != "" {
-		baseURL = os.Getenv("REX_BASEURL")
+	if os.Getenv("REX_DOMAIN") != "" {
+		apiURL = "https://" + os.Getenv("REX_DOMAIN")
+		scURL = "wss://" + os.Getenv("REX_DOMAIN") + "/socketcluster"
 	}
 	if os.Getenv("REX_CLIENT_ID") != "" {
 		clientID = os.Getenv("REX_CLIENT_ID")
@@ -53,9 +53,6 @@ func init() {
 	if os.Getenv("REX_CLIENT_SECRET") != "" {
 		clientSecret = os.Getenv("REX_CLIENT_SECRET")
 	}
-
-	apiURL = baseURL + "/rex-gateway/api/v2"
-	tokenURL = baseURL
 
 	printSettings()
 }
@@ -67,16 +64,21 @@ func help(exit int) {
 }
 
 func printSettings() {
-	fmt.Println("BaseURL       ", baseURL)
+	fmt.Println("API           ", apiURL)
+	fmt.Println("SocketCluster ", scURL)
 	fmt.Println("ClientID:     ", clientID)
-	fmt.Println("ClientSecret: ", clientSecret)
+	if clientSecret != "" {
+		fmt.Println("ClientSecret:  ********")
+	} else {
+		fmt.Println("ClientSecret:  MISSING")
+	}
 }
 
 // login fetches a new token and stores it locally in the token file
 func login() {
 	fmt.Println("Logging into rexOS ...")
 
-	cli := gorex.NewRexClient(tokenURL, apiURL, apiURL)
+	cli := gorex.NewRexClient(apiURL)
 
 	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
 	if err != nil {
@@ -111,7 +113,7 @@ func authenticate() {
 	if err != nil {
 		log.Fatal("Cannot unmarshal stored token from file ", tokenFile)
 	}
-	rexClient = gorex.NewRexClientWithToken(tokenURL, apiURL, apiURL, token)
+	rexClient = gorex.NewRexClientWithToken(apiURL, token)
 
 	// get user information
 	userService := gorex.NewUserService(rexClient)
@@ -127,7 +129,7 @@ func authenticate() {
 	fmt.Println("Logged in as")
 	fmt.Println("  name:        ", rexUser.FirstName, rexUser.LastName)
 	fmt.Println("  rexUsername: ", rexUser.Username)
-	fmt.Println("  rexUserid:   ", rexUser.UserID)
+	fmt.Println("  rexUserId:   ", rexUser.UserID)
 	fmt.Println()
 }
 

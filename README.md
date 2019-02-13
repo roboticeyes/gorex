@@ -42,6 +42,18 @@ cd cmd/rxc
 go build
 ```
 
+`rxc` uses environment variables to define the REX domain and user credentials, you need to set the following
+environment variables:
+
+```
+REX_DOMAIN=rex.robotic-eyes.com
+REX_CLIENT_ID=<your client id>
+REX_CLIENT_SECRET=<your client secret>
+```
+
+Please check our [documentation](https://support.robotic-eyes.com/rest/index.html#overview-authentication) to generate
+valid user credentials.
+
 ## Register an account
 
 In order to work with the rexOS you need a REX account.

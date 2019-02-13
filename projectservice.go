@@ -45,7 +45,7 @@ func NewProjectService(client HTTPClient) ProjectService {
 // FindByNameAndOwner returns the unique identified project by userId and project name
 func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error) {
 
-	query := s.client.GetProjectURL() + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
+	query := s.client.GetAPIURL() + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
 	req, _ := http.NewRequest("GET", query, nil)
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error
 // FindByNameAndOwner returns the unique identified project by userId and project name
 func (s *projectService) FindAllByOwner(owner string) (*ProjectSimpleList, error) {
 
-	query := s.client.GetProjectURL() + apiProjectByOwner + owner
+	query := s.client.GetAPIURL() + apiProjectByOwner + owner
 	req, _ := http.NewRequest("GET", query, nil)
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -137,7 +137,7 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 
 	// Create project file
 	json.NewEncoder(b).Encode(projectFile)
-	req, _ := http.NewRequest("POST", s.client.GetProjectURL()+apiProjectFiles, b)
+	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiProjectFiles, b)
 	body, err := s.client.Send(req)
 	if err != nil {
 		return fmt.Errorf("Got server response %s with error %s", body, err)
@@ -168,7 +168,7 @@ func (s *projectService) createRexReference(r *Reference) (string, error) {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
 
-	req, _ := http.NewRequest("POST", s.client.GetProjectURL()+apiRexReferences, b)
+	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiRexReferences, b)
 	req.Header.Add("content-type", "application/json")
 	body, err := s.client.Send(req)
 
