@@ -5,6 +5,7 @@ package gorex
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/tidwall/gjson"
 	"net/http"
 )
@@ -38,7 +39,7 @@ func NewUserService(client HTTPClient) UserService {
 // The current user is the one which has been identified by the authentication token.
 func (s *userService) GetCurrentUser() (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiCurrentUser, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiCurrentUser, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -47,6 +48,9 @@ func (s *userService) GetCurrentUser() (*User, error) {
 
 	var u User
 	err = json.Unmarshal(body, &u)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot get user: %s", err)
+	}
 	u.SelfLink = u.Links.User.Href // assign self link
 	return &u, err
 }
@@ -55,7 +59,7 @@ func (s *userService) GetCurrentUser() (*User, error) {
 // Requires admin permissions!
 func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiUsers, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiUsers, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -68,7 +72,7 @@ func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
 // Requires admin permissions!
 func (s *userService) FindUserByUserID(userID string) (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiFindByID+userID, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiFindByID+userID, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {
@@ -83,7 +87,7 @@ func (s *userService) FindUserByUserID(userID string) (*User, error) {
 // FindUserByEmail retrieves the user ID of a given email address
 func (s *userService) FindUserByEmail(email string) (*User, error) {
 
-	req, _ := http.NewRequest("GET", s.client.GetAuthURL()+apiFindByEmail+email, nil)
+	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiFindByEmail+email, nil)
 
 	body, err := s.client.Send(req)
 	if err != nil {

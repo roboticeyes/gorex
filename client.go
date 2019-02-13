@@ -15,14 +15,13 @@ import (
 )
 
 var (
-	apiAuth = "/oauth/token"
+	apiToken = "/oauth/token"
+	apiBase  = "/rex-gateway/api/v2"
 )
 
 // RexClient contains the necessary data for a RexClient
 type RexClient struct {
-	tokenURL   string
-	authURL    string
-	projectURL string
+	domain string
 
 	Token      oauth2.Token // Contains the authentication token
 	httpClient *http.Client // The actual net client
@@ -33,41 +32,27 @@ type RexClient struct {
 // The RexClient is implementing this interface and performs the actual call.
 type HTTPClient interface {
 	GetTokenURL() string
-	GetAuthURL() string
-	GetProjectURL() string
+	GetAPIURL() string
 	Send(req *http.Request) ([]byte, error)
 }
 
 // NewRexClient returns a new instance of a RexClient
-func NewRexClient(tokenURL, authURL, projectURL string) *RexClient {
+func NewRexClient(domain string) *RexClient {
 
 	return &RexClient{
-		tokenURL:   tokenURL,
-		authURL:    authURL,
-		projectURL: projectURL,
+		domain:     domain,
 		httpClient: http.DefaultClient,
 	}
 }
 
 // NewRexClientWithToken returns a new instance of a RexClient with a given token
-func NewRexClientWithToken(tokenURL, authURL, projectURL string, token oauth2.Token) *RexClient {
+func NewRexClientWithToken(domain string, token oauth2.Token) *RexClient {
 
 	return &RexClient{
-		tokenURL:   tokenURL,
-		authURL:    authURL,
-		projectURL: projectURL,
+		domain:     domain,
 		Token:      token,
 		httpClient: http.DefaultClient,
 	}
-}
-
-// ConnectWithToken stores and validates the token for later usage
-func (c *RexClient) ConnectWithToken(token oauth2.Token) error {
-	c.Token = token
-
-	// TODO validate token
-
-	return nil
 }
 
 // ConnectWithClientCredentials performs a netowrk to the rexos backend, and retrieves
@@ -76,7 +61,7 @@ func (c *RexClient) ConnectWithToken(token oauth2.Token) error {
 // Returns nil if connection was ok, else returns the proper error
 func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) (*oauth2.Token, error) {
 
-	req, err := http.NewRequest("POST", c.tokenURL+apiAuth, strings.NewReader("grant_type=client_credentials"))
+	req, err := http.NewRequest("POST", c.GetTokenURL(), strings.NewReader("grant_type=client_credentials"))
 	if err != nil {
 		return nil, err
 	}
@@ -127,17 +112,12 @@ func (c *RexClient) Send(req *http.Request) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-// GetProjectURL returns the REX base URL for the project resource
-func (c *RexClient) GetProjectURL() string {
-	return c.projectURL
-}
-
-// GetAuthURL returns the REX base URL for the authentication resource
-func (c *RexClient) GetAuthURL() string {
-	return c.authURL
+// GetAPIURL returns the REX API URL for all API calls
+func (c *RexClient) GetAPIURL() string {
+	return c.domain + apiBase
 }
 
 // GetTokenURL returns the REX base URL for the token authentication
 func (c *RexClient) GetTokenURL() string {
-	return c.tokenURL
+	return c.domain + apiToken
 }
