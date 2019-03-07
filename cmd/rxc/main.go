@@ -3,13 +3,17 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
+	"text/scanner"
 
+	"github.com/breiting/socketcluster-client-go/scclient"
 	"github.com/roboticeyes/gorex"
 )
 
@@ -20,12 +24,13 @@ rxc - command line client for rexOS
 
 actions:
 
-  rxc help               print this help
+  rxc help                  print this help
 
-  rxc login              authenticate user and retrieve auth token
+  rxc login                 authenticate user and retrieve auth token
 
-  rxc ls                 list all projects
-  rxc ls "project name"  show details for a given project
+  rxc ls                    list all projects
+  rxc ls "project name"     show details for a given project
+  rxc listen "project name" listens to project change notifications
 `
 
 const (
@@ -39,13 +44,14 @@ var (
 	clientSecret = ""
 	rexClient    *gorex.RexClient
 	rexUser      *gorex.User
+	project      *gorex.Project
 )
 
 func init() {
 
 	if os.Getenv("REX_DOMAIN") != "" {
 		apiURL = "https://" + os.Getenv("REX_DOMAIN")
-		scURL = "wss://" + os.Getenv("REX_DOMAIN") + "/socketcluster"
+		scURL = "wss://" + os.Getenv("REX_DOMAIN") + "/socketcluster/"
 	}
 	if os.Getenv("REX_CLIENT_ID") != "" {
 		clientID = os.Getenv("REX_CLIENT_ID")
@@ -159,6 +165,69 @@ func listProject(projectName string) {
 	fmt.Println(project)
 }
 
+func onConnect(client scclient.Client) {
+	fmt.Println("Connected to server")
+}
+
+func onDisconnect(client scclient.Client, err error) {
+	fmt.Printf("Error on disconnect: %s\n", err.Error())
+}
+
+func onConnectError(client scclient.Client, err error) {
+	fmt.Printf("Error on connection: %s\n", err.Error())
+}
+
+func onSetAuthentication(client scclient.Client, token string) {
+	fmt.Println("Auth token received")
+}
+
+func onSocketClusterAuthentication(client scclient.Client, isAuthenticated bool) {
+
+	// prepare proper URN for listener
+	urn := "v1.resource.project." + strings.Replace(project.Urn, ":", ".", -1)
+
+	client.SubscribeAck(urn, func(channelName string, err interface{}, data interface{}) {
+		if err != nil {
+			fmt.Println("Cannot get listen callback", err)
+			os.Exit(1)
+		}
+	})
+
+	client.OnChannel(urn, func(channelName string, data interface{}) {
+		str, _ := data.(string)
+		var out bytes.Buffer
+		json.Indent(&out, []byte(str), "", "  ")
+		out.WriteTo(os.Stdout)
+	})
+}
+
+func listenProject(projectName string) {
+	var reader scanner.Scanner
+	var err error
+
+	projectService := gorex.NewProjectService(rexClient)
+	project, err = projectService.FindByNameAndOwner(projectName, rexUser.UserID)
+
+	if err != nil {
+		fmt.Println("Cannot get project", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(project)
+
+	client := scclient.New(scURL)
+	client.SetBasicListener(onConnect, onConnectError, onDisconnect)
+	client.SetAuthenticationListener(onSetAuthentication, onSocketClusterAuthentication)
+	client.RequestHeader = make(map[string][]string)
+	authToken := "bearer " + rexClient.Token.AccessToken
+	client.RequestHeader.Set("Authorization", authToken)
+	go client.Connect()
+
+	fmt.Println("Enter any key to terminate the program")
+	reader.Init(os.Stdin)
+	reader.Next()
+}
+
 func main() {
 	if len(os.Args) == 1 {
 		help(0)
@@ -179,6 +248,14 @@ func main() {
 		case 1:
 			authenticate()
 			listProject(os.Args[2])
+		default:
+			help(1)
+		}
+	case "listen":
+		switch commandArgs {
+		case 1:
+			authenticate()
+			listenProject(os.Args[2])
 		default:
 			help(1)
 		}

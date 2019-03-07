@@ -38,6 +38,7 @@ type Project struct {
 	TagLine     string `json:"tagLine"`
 	Type        string `json:"type"`
 	Description string `json:"description"`
+	Urn         string `json:"urn"`
 	Embedded    struct {
 		RootRexReference struct {
 			RootReference bool   `json:"rootReference"`
@@ -161,6 +162,7 @@ func (p Project) String() string {
 
 	s := fmt.Sprintf("|------------------------------------------------------------------------------------------|\n")
 	s += fmt.Sprintf("| Name           | %-71s |\n", p.Name)
+	s += fmt.Sprintf("| Urn            | %-71s |\n", p.Urn)
 	s += fmt.Sprintf("| Owner          | %-71s |\n", p.Owner)
 	s += fmt.Sprintf("| Type           | %-71s |\n", p.Type)
 	s += fmt.Sprintf("| Has root ref   | %-71t |\n", hasRootRef)
