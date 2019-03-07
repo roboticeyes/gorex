@@ -1,6 +1,7 @@
 module github.com/roboticeyes/gorex
 
 require (
+	github.com/breiting/socketcluster-client-go v1.0.1
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/rgamba/evtwebsocket v0.0.0-20181029234908-48b8cd9f8616 // indirect

@@ -1,3 +1,5 @@
+github.com/breiting/socketcluster-client-go v1.0.1 h1:uNBYZ49Aet71Sev08vO5uOL6IVtm16Sf3naYoqY7Qa4=
+github.com/breiting/socketcluster-client-go v1.0.1/go.mod h1:wdxdewEtR84+NYdHehok2P4Mk5Oie3Ihuy5q1DJKTqw=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/uuid v1.1.0 h1:Jf4mxPC/ziBnoPIdpQdPJ9OeiomAUHLvxmPRSPH9m4s=

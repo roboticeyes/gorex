@@ -13,8 +13,8 @@ import (
 	"strings"
 	"text/scanner"
 
+	"github.com/breiting/socketcluster-client-go/scclient"
 	"github.com/roboticeyes/gorex"
-	"github.com/sacOO7/socketcluster-client-go/scclient"
 )
 
 // the help text that gets displayed when something goes wrong or when you run
