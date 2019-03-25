@@ -8,7 +8,10 @@ import (
 
 const (
 	// TotalHeaderSize is the number of bytes for each block header
-	TotalHeaderSize = 16
+	totalHeaderSize = 16
+
+	typePointList = 2
+	typeMesh      = 3
 )
 
 // Header defines the structure of the REX header
@@ -65,4 +68,27 @@ func (h *Header) Write(w io.Writer) (int, error) {
 		}
 	}
 	return w.Write(buf.Bytes())
+}
+
+// GetDataBlockHeader returns a new data block header,
+// where `sz` denotes the total size of the data block including
+// the data block header size (TotalHeaderSize)
+func GetDataBlockHeader(blockType, version uint16, blockID uint64, sz int) []byte {
+
+	buf := new(bytes.Buffer)
+	var data = []interface{}{
+		uint16(blockType),
+		uint16(version),
+		uint32(sz - totalHeaderSize),
+		uint64(blockID),
+	}
+
+	for _, v := range data {
+		err := binary.Write(buf, binary.LittleEndian, v)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return buf.Bytes()
 }

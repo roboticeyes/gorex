@@ -4,66 +4,39 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+
+	"github.com/go-gl/mathgl/mgl32"
 )
 
-// Point ...
-type Point struct {
-	X float32
-	Y float32
-	Z float32
-}
+const (
+	pointListBlockVersion = 1
+)
 
-// Color ...
-type Color struct {
-	R float32
-	G float32
-	B float32
-}
-
-// PointList ...
+// PointList stores a list of (colored) 3D points
 type PointList struct {
-	Points []Point
-	Colors []Color
-}
-
-func getHeader(id uint64, sz int) []byte {
-
-	buf := new(bytes.Buffer)
-	var data = []interface{}{
-		uint16(2),
-		uint16(1),
-		uint32(sz - TotalHeaderSize),
-		uint64(id),
-	}
-
-	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
-		if err != nil {
-			panic(err)
-		}
-	}
-	return buf.Bytes()
+	ID     uint64
+	Points []mgl32.Vec3
+	Colors []mgl32.Vec3
 }
 
 // GetSize returns the estimated size of the block in bytes
-func (p *PointList) GetSize() int {
-	return TotalHeaderSize + 4 + 4 + len(p.Points)*12 + len(p.Colors)*12
+func (block *PointList) GetSize() int {
+	return totalHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
 }
 
 // Write writes the pointlist to the given writer
-func (p *PointList) Write(id uint64, w io.Writer) (int, error) {
+func (block *PointList) Write(w io.Writer) (int, error) {
 
 	// return if nothing needs to be written
-	if len(p.Points) == 0 {
+	if len(block.Points) == 0 {
 		return 0, nil
 	}
 
 	buf := new(bytes.Buffer)
-
 	var data = []interface{}{
-		getHeader(id, p.GetSize()),
-		uint32(len(p.Points)),
-		uint32(len(p.Colors)),
+		GetDataBlockHeader(typePointList, pointListBlockVersion, block.ID, block.GetSize()),
+		uint32(len(block.Points)),
+		uint32(len(block.Colors)),
 	}
 	for _, v := range data {
 		err := binary.Write(buf, binary.LittleEndian, v)
@@ -72,31 +45,31 @@ func (p *PointList) Write(id uint64, w io.Writer) (int, error) {
 		}
 	}
 	// Points
-	for _, p := range p.Points {
-		err := binary.Write(buf, binary.LittleEndian, p.X)
+	for _, p := range block.Points {
+		err := binary.Write(buf, binary.LittleEndian, p.X())
 		if err != nil {
 			return 0, err
 		}
-		err = binary.Write(buf, binary.LittleEndian, p.Y)
+		err = binary.Write(buf, binary.LittleEndian, p.Y())
 		if err != nil {
 			return 0, err
 		}
-		err = binary.Write(buf, binary.LittleEndian, p.Z)
+		err = binary.Write(buf, binary.LittleEndian, p.Z())
 		if err != nil {
 			return 0, err
 		}
 	}
 	// Colors
-	for _, c := range p.Colors {
-		err := binary.Write(buf, binary.LittleEndian, c.R)
+	for _, c := range block.Colors {
+		err := binary.Write(buf, binary.LittleEndian, c.X() /* red */)
 		if err != nil {
 			return 0, err
 		}
-		err = binary.Write(buf, binary.LittleEndian, c.G)
+		err = binary.Write(buf, binary.LittleEndian, c.Y() /* green */)
 		if err != nil {
 			return 0, err
 		}
-		err = binary.Write(buf, binary.LittleEndian, c.B)
+		err = binary.Write(buf, binary.LittleEndian, c.Z() /* blue */)
 		if err != nil {
 			return 0, err
 		}

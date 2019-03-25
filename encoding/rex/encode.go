@@ -25,14 +25,23 @@ func (enc *Encoder) Encode(r File) (int, error) {
 	n, err := r.Header().Write(enc.w)
 	total += n
 
-	// Write PointList
-	for _, p := range r.PointList {
-		n, err = p.Write(0, enc.w)
-		fmt.Println("Written ", n)
-		total += n
+	// Write PointLists
+	for _, p := range r.PointLists {
+		n, err = p.Write(enc.w)
+		total += p.GetSize() // - totalHeaderSize
 		if err != nil {
 			return total, err
 		}
+	}
+
+	// Write Meshes
+	for _, m := range r.Meshes {
+		n, err = m.Write(enc.w)
+		total += m.GetSize() // - totalHeaderSize
+		if err != nil {
+			return total, err
+		}
+		fmt.Println("Mesh written ", total)
 	}
 
 	return total, nil
