@@ -4,6 +4,18 @@ package rex
 // either be stored locally or sent to an arbirary writer with
 // the Encoder.
 type File struct {
-	Header    Header
 	PointList []PointList
+}
+
+// Header generates a proper header for the File datastructure
+func (f *File) Header() *Header {
+
+	header := CreateHeader()
+
+	for _, b := range f.PointList {
+		header.NrBlocks++
+		header.SizeBytes += (uint64)(b.GetSize())
+	}
+
+	return header
 }

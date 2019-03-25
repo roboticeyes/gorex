@@ -6,6 +6,11 @@ import (
 	"io"
 )
 
+const (
+	// TotalHeaderSize is the number of bytes for each block header
+	TotalHeaderSize = 16
+)
+
 // Header defines the structure of the REX header
 type Header struct {
 	magic     [4]byte

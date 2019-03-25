@@ -3,7 +3,7 @@ package rex
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+	"io"
 )
 
 // Point ...
@@ -32,7 +32,7 @@ func getHeader(id uint64, sz int) []byte {
 	var data = []interface{}{
 		uint16(2),
 		uint16(1),
-		uint32(sz),
+		uint32(sz - TotalHeaderSize),
 		uint64(id),
 	}
 
@@ -45,56 +45,61 @@ func getHeader(id uint64, sz int) []byte {
 	return buf.Bytes()
 }
 
-// Marshal converts a REX point list to a proper buffer
-func (p *PointList) Marshal(id uint64) ([]byte, uint64, error) {
+// GetSize returns the estimated size of the block in bytes
+func (p *PointList) GetSize() int {
+	return TotalHeaderSize + 4 + 4 + len(p.Points)*12 + len(p.Colors)*12
+}
 
-	buf := new(bytes.Buffer)
+// Write writes the pointlist to the given writer
+func (p *PointList) Write(id uint64, w io.Writer) (int, error) {
+
+	// return if nothing needs to be written
 	if len(p.Points) == 0 {
-		return buf.Bytes(), 0, fmt.Errorf("No points found")
+		return 0, nil
 	}
 
-	sz := 4 + 4 + len(p.Points)*12 + len(p.Colors)*12
+	buf := new(bytes.Buffer)
 
 	var data = []interface{}{
-		getHeader(id, sz),
+		getHeader(id, p.GetSize()),
 		uint32(len(p.Points)),
 		uint32(len(p.Colors)),
 	}
 	for _, v := range data {
 		err := binary.Write(buf, binary.LittleEndian, v)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 	}
 	// Points
 	for _, p := range p.Points {
 		err := binary.Write(buf, binary.LittleEndian, p.X)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 		err = binary.Write(buf, binary.LittleEndian, p.Y)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 		err = binary.Write(buf, binary.LittleEndian, p.Z)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 	}
 	// Colors
 	for _, c := range p.Colors {
 		err := binary.Write(buf, binary.LittleEndian, c.R)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 		err = binary.Write(buf, binary.LittleEndian, c.G)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 		err = binary.Write(buf, binary.LittleEndian, c.B)
 		if err != nil {
-			return buf.Bytes(), 0, err
+			return 0, err
 		}
 	}
-	return buf.Bytes(), uint64(sz + 16), nil
+	return w.Write(buf.Bytes())
 }

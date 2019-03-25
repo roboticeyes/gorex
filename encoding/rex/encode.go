@@ -1,6 +1,7 @@
 package rex
 
 import (
+	"fmt"
 	"io"
 )
 
@@ -19,5 +20,20 @@ func NewEncoder(w io.Writer) *Encoder {
 // and nil if no error occurs.
 func (enc *Encoder) Encode(r File) (int, error) {
 
-	return r.Header.Write(enc.w)
+	var total int
+
+	n, err := r.Header().Write(enc.w)
+	total += n
+
+	// Write PointList
+	for _, p := range r.PointList {
+		n, err = p.Write(0, enc.w)
+		fmt.Println("Written ", n)
+		total += n
+		if err != nil {
+			return total, err
+		}
+	}
+
+	return total, nil
 }

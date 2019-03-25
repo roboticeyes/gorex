@@ -102,3 +102,4 @@ fmt.Println(project)
 
 * [rexOS](https://www.rexos.org)
 * [REX](https://rex.robotic-eyes.com)
+* [REXv1 file format](https://github.com/roboticeyes/openrex/blob/master/doc/rex-spec-v1.md)
