@@ -102,6 +102,18 @@ if err != nil {
 fmt.Println(project)
 
 ```
+
+# Todos
+
+## REX File
+
+* [x] Data block point list
+* [x] Data block mesh
+* [x] Data block material
+* [ ] Data block image
+* [ ] Data block line set
+* [ ] Data block text
+
 ## References
 
 * [rexOS](https://www.rexos.org)
