@@ -1,7 +1,6 @@
 package rex
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -28,7 +27,7 @@ func (enc *Encoder) Encode(r File) (int, error) {
 	// Write PointLists
 	for _, p := range r.PointLists {
 		n, err = p.Write(enc.w)
-		total += p.GetSize() // - totalHeaderSize
+		total += p.GetSize()
 		if err != nil {
 			return total, err
 		}
@@ -37,11 +36,19 @@ func (enc *Encoder) Encode(r File) (int, error) {
 	// Write Meshes
 	for _, m := range r.Meshes {
 		n, err = m.Write(enc.w)
-		total += m.GetSize() // - totalHeaderSize
+		total += m.GetSize()
 		if err != nil {
 			return total, err
 		}
-		fmt.Println("Mesh written ", total)
+	}
+
+	// Write Materials
+	for _, m := range r.Materials {
+		n, err = m.Write(enc.w)
+		total += m.GetSize()
+		if err != nil {
+			return total, err
+		}
 	}
 
 	return total, nil

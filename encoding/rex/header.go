@@ -10,8 +10,14 @@ const (
 	// TotalHeaderSize is the number of bytes for each block header
 	totalHeaderSize = 16
 
-	typePointList = 2
-	typeMesh      = 3
+	typeLineSet          = 0
+	typeText             = 1
+	typePointList        = 2
+	typeMesh             = 3
+	typeImage            = 4
+	typeMaterial         = 5
+	typePeopleSimulation = 6
+	typeUnityPackage     = 7
 )
 
 // Header defines the structure of the REX header

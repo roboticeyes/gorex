@@ -43,7 +43,7 @@ func (block *Mesh) GetSize() int {
 		len(block.Triangles)*12
 }
 
-// Write writes the pointlist to the given writer
+// Write writes the mesh to the given writer
 func (block *Mesh) Write(w io.Writer) (int, error) {
 
 	// return if nothing needs to be written
