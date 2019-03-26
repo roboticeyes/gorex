@@ -14,7 +14,7 @@ import (
 	"text/scanner"
 
 	"github.com/breiting/socketcluster-client-go/scclient"
-	"github.com/roboticeyes/gorex"
+	"github.com/roboticeyes/gorex/http/rexos"
 )
 
 // the help text that gets displayed when something goes wrong or when you run
@@ -42,9 +42,9 @@ var (
 	scURL        = "" // composed SocketCluster url based on domain information
 	clientID     = ""
 	clientSecret = ""
-	rexClient    *gorex.RexClient
-	rexUser      *gorex.User
-	project      *gorex.Project
+	rexClient    *rexos.RexClient
+	rexUser      *rexos.User
+	project      *rexos.Project
 )
 
 func init() {
@@ -84,7 +84,7 @@ func printSettings() {
 func login() {
 	fmt.Println("Logging into rexOS ...")
 
-	cli := gorex.NewRexClient(apiURL)
+	cli := rexos.NewRexClient(apiURL)
 
 	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
 	if err != nil {
@@ -119,10 +119,10 @@ func authenticate() {
 	if err != nil {
 		log.Fatal("Cannot unmarshal stored token from file ", tokenFile)
 	}
-	rexClient = gorex.NewRexClientWithToken(apiURL, token)
+	rexClient = rexos.NewRexClientWithToken(apiURL, token)
 
 	// get user information
-	userService := gorex.NewUserService(rexClient)
+	userService := rexos.NewUserService(rexClient)
 
 	rexUser, err = userService.GetCurrentUser()
 	if err != nil {
@@ -140,7 +140,7 @@ func authenticate() {
 }
 
 func listProjects() {
-	projectService := gorex.NewProjectService(rexClient)
+	projectService := rexos.NewProjectService(rexClient)
 	projects, err := projectService.FindAllByOwner(rexUser.UserID)
 
 	if err != nil {
@@ -155,7 +155,7 @@ func listProjects() {
 }
 
 func listProject(projectName string) {
-	projectService := gorex.NewProjectService(rexClient)
+	projectService := rexos.NewProjectService(rexClient)
 	project, err := projectService.FindByNameAndOwner(projectName, rexUser.UserID)
 
 	if err != nil {
@@ -205,7 +205,7 @@ func listenProject(projectName string) {
 	var reader scanner.Scanner
 	var err error
 
-	projectService := gorex.NewProjectService(rexClient)
+	projectService := rexos.NewProjectService(rexClient)
 	project, err = projectService.FindByNameAndOwner(projectName, rexUser.UserID)
 
 	if err != nil {

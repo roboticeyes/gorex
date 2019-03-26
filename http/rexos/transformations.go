@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package gorex
+package rexos
 
 // ProjectTransformation is used for the absoluteTransformation as well as for the relativeTransformation of a RexReference
 type ProjectTransformation struct {

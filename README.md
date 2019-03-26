@@ -6,8 +6,12 @@
 
 # gorex
 
-The `gorex` library provides a client implementation for the [rexOS](https://www.rexos.org) API in Go. The library can
-easily be integrated into your Go project. It can help you to get started with the provided REX API.
+The `gorex` library provides a library which works with [rexOS](https://www.rexos.org). The library can
+easily be integrated into your Go project. It can help you to get started with REX as a developer. The library offers
+two different main features:
+
+* Working with the [REX file format](https://github.com/roboticeyes/openrex/blob/master/doc/rex-spec-v1.md)
+* Working with the [rexOS REST API](https://support.robotic-eyes.com/rest/index.html)
 
 ## Installation
 
@@ -98,7 +102,20 @@ if err != nil {
 fmt.Println(project)
 
 ```
+
+# Todos
+
+## REX File
+
+* [x] Data block point list
+* [x] Data block mesh
+* [x] Data block material
+* [ ] Data block image
+* [ ] Data block line set
+* [ ] Data block text
+
 ## References
 
 * [rexOS](https://www.rexos.org)
 * [REX](https://rex.robotic-eyes.com)
+* [REX file format v1](https://github.com/roboticeyes/openrex/blob/master/doc/rex-spec-v1.md)

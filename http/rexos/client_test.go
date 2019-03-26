@@ -1,4 +1,4 @@
-package gorex
+package rexos
 
 import (
 	"testing"
