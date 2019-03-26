@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package gorex
+package rexos
 
 // ProjectAddress defines the address information for a project
 type ProjectAddress struct {
