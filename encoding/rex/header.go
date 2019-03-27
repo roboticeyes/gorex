@@ -3,12 +3,13 @@ package rex
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 )
 
 const (
-	// TotalHeaderSize is the number of bytes for each block header
-	totalHeaderSize = 16
+	rexFileHeaderSize = 64
+	totalHeaderSize   = 16
 
 	typeLineSet          = 0
 	typeText             = 1
@@ -22,28 +23,28 @@ const (
 
 // Header defines the structure of the REX header
 type Header struct {
-	magic     [4]byte
-	version   uint16
-	crc       uint32
+	Magic     [4]byte
+	Version   uint16
+	Crc       uint32
 	NrBlocks  uint16
-	startAddr uint16
+	StartAddr uint16
 	SizeBytes uint64
-	reserved  [42]byte
+	Reserved  [42]byte
 }
 
 // CreateHeader returns a valid fresh header block
 func CreateHeader() *Header {
 	header := &Header{
-		version:   1,
-		crc:       0,
+		Version:   1,
+		Crc:       0,
 		NrBlocks:  0,
-		startAddr: 86, // fixed CSB of 22 bytes
+		StartAddr: 86, // fixed CSB of 22 bytes
 		SizeBytes: 0,
 	}
-	header.magic[0] = 'R'
-	header.magic[1] = 'E'
-	header.magic[2] = 'X'
-	header.magic[3] = '1'
+	header.Magic[0] = 'R'
+	header.Magic[1] = 'E'
+	header.Magic[2] = 'X'
+	header.Magic[3] = '1'
 	return header
 }
 
@@ -52,13 +53,13 @@ func (h *Header) Write(w io.Writer) (int, error) {
 	buf := new(bytes.Buffer)
 
 	var header = []interface{}{
-		h.magic,
-		h.version,
-		h.crc,
+		h.Magic,
+		h.Version,
+		h.Crc,
 		h.NrBlocks,
-		h.startAddr,
+		h.StartAddr,
 		h.SizeBytes,
-		h.reserved,
+		h.Reserved,
 		// default CSB block
 		uint32(3876),
 		uint16(4),
@@ -74,6 +75,30 @@ func (h *Header) Write(w io.Writer) (int, error) {
 		}
 	}
 	return w.Write(buf.Bytes())
+}
+
+// ReadHeader reads the REX header from a given file
+func ReadHeader(r io.Reader) (*Header, error) {
+
+	var header Header
+	if err := binary.Read(r, binary.LittleEndian, &header); err != nil {
+		fmt.Println("ReadHeader failed:", err)
+		return &Header{}, fmt.Errorf("Error during reading header %v", err)
+	}
+
+	// read coordinate system block
+	var srid uint32
+	var sz uint16
+	binary.Read(r, binary.LittleEndian, &srid)
+	binary.Read(r, binary.LittleEndian, &sz)
+	name := make([]byte, sz)
+	binary.Read(r, binary.LittleEndian, &name)
+	var x, y, z float32
+	binary.Read(r, binary.LittleEndian, &x)
+	binary.Read(r, binary.LittleEndian, &y)
+	binary.Read(r, binary.LittleEndian, &z)
+
+	return &header, nil
 }
 
 // GetDataBlockHeader returns a new data block header,
@@ -97,4 +122,19 @@ func GetDataBlockHeader(blockType, version uint16, blockID uint64, sz int) []byt
 	}
 
 	return buf.Bytes()
+}
+
+// String nicely print header
+func (h Header) String() string {
+
+	s := fmt.Sprintf("\n")
+	s += fmt.Sprintf("| MAGIC          | %-41s |\n", h.Magic)
+	s += fmt.Sprintf("| Version        | %-41d |\n", h.Version)
+	s += fmt.Sprintf("| CRC            | %-41d |\n", h.Crc)
+	s += fmt.Sprintf("| NrBlocks       | %-41d |\n", h.NrBlocks)
+	s += fmt.Sprintf("| StartAddr      | %-41d |\n", h.StartAddr)
+	s += fmt.Sprintf("| SizeBytes      | %-41d |\n", h.SizeBytes)
+	s += fmt.Sprintf("\n")
+
+	return s
 }

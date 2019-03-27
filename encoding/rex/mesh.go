@@ -3,6 +3,7 @@ package rex
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -41,6 +42,33 @@ func (block *Mesh) GetSize() int {
 		len(block.TexCoords)*8 +
 		len(block.Colors)*12 +
 		len(block.Triangles)*12
+}
+
+// ReadMesh reads a REX mesh
+func ReadMesh(buf []byte) (*Mesh, error) {
+
+	r := bytes.NewReader(buf)
+
+	var rexMesh struct {
+		Lod, MaxLod                               uint16
+		NrCoords, NrNor, NrTex, NrCol             uint32
+		NrTriangles                               uint32
+		StartCoords, StartNor, StartTex, StartCol uint32
+		StartTriangles                            uint32
+		MaterialID                                uint64
+		NameSize                                  uint16
+		Name                                      [74]byte
+	}
+	if err := binary.Read(r, binary.LittleEndian, &rexMesh); err != nil {
+		fmt.Println("Reading MeshHeader failed: ", err)
+	}
+
+	var mesh Mesh
+	mesh.Name = string(rexMesh.Name[:rexMesh.NameSize])
+
+	fmt.Println(mesh)
+
+	return &mesh, nil
 }
 
 // Write writes the mesh to the given writer
@@ -156,4 +184,19 @@ func writeVec3(w io.Writer, v mgl32.Vec3) {
 	if err != nil {
 		panic("Error during binary writing Vec3")
 	}
+}
+
+// String nicely print mesh
+func (m Mesh) String() string {
+
+	s := fmt.Sprintf("\n")
+	s += fmt.Sprintf("| Name           | %-41s |\n", m.Name)
+	s += fmt.Sprintf("| MaterialID     | %-41d |\n", m.MaterialID)
+	s += fmt.Sprintf("| # Coords       | %-41d |\n", len(m.Coords))
+	s += fmt.Sprintf("| # Normals      | %-41d |\n", len(m.Normals))
+	s += fmt.Sprintf("| # Colors       | %-41d |\n", len(m.Colors))
+	s += fmt.Sprintf("| # Triangle     | %-41d |\n", len(m.Triangles))
+	s += fmt.Sprintf("\n")
+
+	return s
 }

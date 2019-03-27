@@ -26,6 +26,17 @@ type Material struct {
 	Alpha       float32 // 1 is full opaque
 }
 
+// NewMaterial creates a new default material
+func NewMaterial(id uint64) Material {
+	return Material{
+		ID:    id,
+		KaRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		KdRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		KsRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		Alpha: 1,
+	}
+}
+
 // GetSize returns the estimated size of the block in bytes
 func (block *Material) GetSize() int {
 	return totalHeaderSize + materialStandardSize
