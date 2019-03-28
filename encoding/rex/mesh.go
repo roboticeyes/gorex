@@ -96,8 +96,6 @@ func ReadMesh(buf []byte) (*Mesh, error) {
 		fmt.Println("Reading triangles failed: ", err)
 	}
 
-	fmt.Println(mesh)
-
 	return &mesh, nil
 }
 

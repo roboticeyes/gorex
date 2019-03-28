@@ -54,7 +54,7 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 		case typeMesh:
 			mesh, err := ReadMesh(buf)
 			mesh.ID = id
-			if err != nil {
+			if err == nil {
 				file.Meshes = append(file.Meshes, *mesh)
 			}
 		default:
