@@ -3,6 +3,7 @@ package rex
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -40,6 +41,37 @@ func NewMaterial(id uint64) Material {
 // GetSize returns the estimated size of the block in bytes
 func (block *Material) GetSize() int {
 	return totalHeaderSize + materialStandardSize
+}
+
+// ReadMaterial reads a REX material
+func ReadMaterial(buf []byte) (*Material, error) {
+
+	r := bytes.NewReader(buf)
+
+	var rexMaterial struct {
+		KaRed, KaGreen, KaBlue float32
+		KaTextureID            uint64
+		KdRed, KdGreen, KdBlue float32
+		KdTextureID            uint64
+		KsRed, KsGreen, KsBlue float32
+		KsTextureID            uint64
+		Ns                     float32
+		Alpha                  float32
+	}
+	if err := binary.Read(r, binary.LittleEndian, &rexMaterial); err != nil {
+		fmt.Println("Reading Material failed: ", err)
+	}
+
+	return &Material{
+		KaRgb:       mgl32.Vec3{rexMaterial.KaRed, rexMaterial.KaGreen, rexMaterial.KaBlue},
+		KaTextureID: rexMaterial.KaTextureID,
+		KdRgb:       mgl32.Vec3{rexMaterial.KdRed, rexMaterial.KdGreen, rexMaterial.KdBlue},
+		KdTextureID: rexMaterial.KdTextureID,
+		KsRgb:       mgl32.Vec3{rexMaterial.KsRed, rexMaterial.KsGreen, rexMaterial.KsBlue},
+		KsTextureID: rexMaterial.KsTextureID,
+		Ns:          rexMaterial.Ns,
+		Alpha:       rexMaterial.Alpha,
+	}, nil
 }
 
 // Write writes the material to the given writer

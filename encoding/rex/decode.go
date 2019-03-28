@@ -57,6 +57,12 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			if err == nil {
 				file.Meshes = append(file.Meshes, *mesh)
 			}
+		case typeMaterial:
+			material, err := ReadMaterial(buf)
+			material.ID = id
+			if err == nil {
+				file.Materials = append(file.Materials, *material)
+			}
 		default:
 			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", blockType, version, sz, id)
 		}

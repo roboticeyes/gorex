@@ -96,6 +96,8 @@ func ReadMesh(buf []byte) (*Mesh, error) {
 		fmt.Println("Reading triangles failed: ", err)
 	}
 
+	mesh.MaterialID = rexMesh.MaterialID
+
 	return &mesh, nil
 }
 
