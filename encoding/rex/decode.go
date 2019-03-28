@@ -48,7 +48,6 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 		}
 
 		// read block
-		fmt.Printf("reading type %d version %d sz %d id %d\n", blockType, version, sz, id)
 		buf, err := readBlock(dec.r, sz)
 
 		switch blockType {
@@ -58,6 +57,8 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			if err != nil {
 				file.Meshes = append(file.Meshes, *mesh)
 			}
+		default:
+			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", blockType, version, sz, id)
 		}
 
 		if err == io.EOF {

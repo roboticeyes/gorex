@@ -50,14 +50,14 @@ func ReadMesh(buf []byte) (*Mesh, error) {
 	r := bytes.NewReader(buf)
 
 	var rexMesh struct {
-		Lod, MaxLod                               uint16
-		NrCoords, NrNor, NrTex, NrCol             uint32
-		NrTriangles                               uint32
-		StartCoords, StartNor, StartTex, StartCol uint32
-		StartTriangles                            uint32
-		MaterialID                                uint64
-		NameSize                                  uint16
-		Name                                      [74]byte
+		Lod, MaxLod                                           uint16
+		NrCoords, NrNormals, NrTexCoords, NrColors            uint32
+		NrTriangles                                           uint32
+		StartCoords, StartNormals, StartTexCoords, StartColor uint32
+		StartTriangles                                        uint32
+		MaterialID                                            uint64
+		NameSize                                              uint16
+		Name                                                  [74]byte
 	}
 	if err := binary.Read(r, binary.LittleEndian, &rexMesh); err != nil {
 		fmt.Println("Reading MeshHeader failed: ", err)
@@ -65,6 +65,36 @@ func ReadMesh(buf []byte) (*Mesh, error) {
 
 	var mesh Mesh
 	mesh.Name = string(rexMesh.Name[:rexMesh.NameSize])
+
+	// Read coordinates
+	mesh.Coords = make([]mgl32.Vec3, rexMesh.NrCoords)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Coords); err != nil {
+		fmt.Println("Reading coords failed: ", err)
+	}
+
+	// Read normals
+	mesh.Normals = make([]mgl32.Vec3, rexMesh.NrNormals)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Normals); err != nil {
+		fmt.Println("Reading normals failed: ", err)
+	}
+
+	// Read texture
+	mesh.TexCoords = make([]mgl32.Vec2, rexMesh.NrTexCoords)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.TexCoords); err != nil {
+		fmt.Println("Reading texture failed: ", err)
+	}
+
+	// Read color
+	mesh.Colors = make([]mgl32.Vec3, rexMesh.NrColors)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Colors); err != nil {
+		fmt.Println("Reading colors failed: ", err)
+	}
+
+	// Read triangles
+	mesh.Triangles = make([]Triangle, rexMesh.NrTriangles)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Triangles); err != nil {
+		fmt.Println("Reading triangles failed: ", err)
+	}
 
 	fmt.Println(mesh)
 
@@ -190,13 +220,25 @@ func writeVec3(w io.Writer, v mgl32.Vec3) {
 func (m Mesh) String() string {
 
 	s := fmt.Sprintf("\n")
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
+	s += fmt.Sprintf("| Mesh datablock                                             |\n")
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
 	s += fmt.Sprintf("| Name           | %-41s |\n", m.Name)
 	s += fmt.Sprintf("| MaterialID     | %-41d |\n", m.MaterialID)
 	s += fmt.Sprintf("| # Coords       | %-41d |\n", len(m.Coords))
 	s += fmt.Sprintf("| # Normals      | %-41d |\n", len(m.Normals))
 	s += fmt.Sprintf("| # Colors       | %-41d |\n", len(m.Colors))
 	s += fmt.Sprintf("| # Triangle     | %-41d |\n", len(m.Triangles))
-	s += fmt.Sprintf("\n")
+	s += fmt.Sprintf("\n--- Coordinates\n\n")
+
+	for _, c := range m.Coords {
+		s += fmt.Sprintf(" %5v \n", c)
+	}
+	s += fmt.Sprintf("\n--- Triangles\n\n")
+	for _, c := range m.Triangles {
+		s += fmt.Sprintf(" %5v \n", c)
+	}
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
 
 	return s
 }
