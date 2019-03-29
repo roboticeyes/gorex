@@ -5,7 +5,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"testing"
-	// "github.com/go-gl/mathgl/mgl32"
 )
 
 func TestDecodingHeader(t *testing.T) {
@@ -26,7 +25,9 @@ func TestDecodingHeader(t *testing.T) {
 		fmt.Println("rex file is nil")
 	}
 
-	fmt.Println(header)
+	if header.SizeBytes != 276 {
+		t.Fatalf("TotalSize does not match")
+	}
 }
 
 // Base64 encoded test REX file

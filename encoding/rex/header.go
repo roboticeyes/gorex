@@ -32,6 +32,14 @@ type Header struct {
 	Reserved  [42]byte
 }
 
+// DataBlockHeader stores the header information of a data block
+type DataBlockHeader struct {
+	Type    uint16
+	Version uint16
+	Size    uint32
+	ID      uint64
+}
+
 // CreateHeader returns a valid fresh header block
 func CreateHeader() *Header {
 	header := &Header{
@@ -99,6 +107,15 @@ func ReadHeader(r io.Reader) (*Header, error) {
 	binary.Read(r, binary.LittleEndian, &z)
 
 	return &header, nil
+}
+
+// ReadDataBlockHeader reads a data block header from reader
+func ReadDataBlockHeader(r io.Reader) (DataBlockHeader, error) {
+	var hdr DataBlockHeader
+	if err := binary.Read(r, binary.LittleEndian, &hdr); err != nil {
+		return hdr, err
+	}
+	return hdr, nil
 }
 
 // GetDataBlockHeader returns a new data block header,
