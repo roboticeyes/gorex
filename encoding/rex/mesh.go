@@ -61,6 +61,7 @@ func ReadMesh(r io.Reader, hdr DataBlockHeader) (*Mesh, error) {
 	}
 
 	var mesh Mesh
+	mesh.ID = hdr.ID
 	mesh.Name = string(rexMesh.Name[:rexMesh.NameSize])
 
 	// Read coordinates

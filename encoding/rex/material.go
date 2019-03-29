@@ -60,6 +60,7 @@ func ReadMaterial(r io.Reader, hdr DataBlockHeader) (*Material, error) {
 	}
 
 	return &Material{
+		ID:          hdr.ID,
 		KaRgb:       mgl32.Vec3{rexMaterial.KaRed, rexMaterial.KaGreen, rexMaterial.KaBlue},
 		KaTextureID: rexMaterial.KaTextureID,
 		KdRgb:       mgl32.Vec3{rexMaterial.KdRed, rexMaterial.KdGreen, rexMaterial.KdBlue},
