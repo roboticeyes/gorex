@@ -2,7 +2,7 @@ package rex
 
 import (
 	"bytes"
-	"os"
+	// "os"
 	"testing"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -14,12 +14,9 @@ func TestEncodingHeader(t *testing.T) {
 
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
-	n, err := e.Encode(rexFile)
+	err := e.Encode(rexFile)
 	if err != nil {
 		t.Fatalf("TEST ERROR: %v", err)
-	}
-	if n != 86 {
-		t.Fatalf("Header size does not match")
 	}
 }
 
@@ -37,7 +34,7 @@ func TestEncodingPointList(t *testing.T) {
 
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
-	_, err := e.Encode(rexFile)
+	err := e.Encode(rexFile)
 	if err != nil {
 		t.Fatalf("TEST ERROR: %v", err)
 	}
@@ -57,7 +54,7 @@ func TestEncodingMesh(t *testing.T) {
 
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
-	_, err := e.Encode(rexFile)
+	err := e.Encode(rexFile)
 	if err != nil {
 		t.Fatalf("TEST ERROR: %v", err)
 	}
@@ -89,15 +86,12 @@ func TestEncodingMeshAndMaterial(t *testing.T) {
 
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
-	n, err := e.Encode(rexFile)
+	err := e.Encode(rexFile)
 	if err != nil {
 		t.Fatalf("TEST ERROR: %v", err)
 	}
-	if n != 362 {
-		t.Fatalf("Final file size does not meet expected size")
-	}
 
-	f, _ := os.Create("mesh.rex")
-	f.Write(buf.Bytes())
-	defer f.Close()
+	// f, _ := os.Create("mesh.rex")
+	// f.Write(buf.Bytes())
+	// defer f.Close()
 }

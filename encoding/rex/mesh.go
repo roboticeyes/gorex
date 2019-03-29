@@ -1,8 +1,8 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -35,7 +35,7 @@ type Mesh struct {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *Mesh) GetSize() int {
-	return totalHeaderSize + meshHeaderSize +
+	return rexDataBlockHeaderSize + meshHeaderSize +
 		len(block.Coords)*12 +
 		len(block.Normals)*12 +
 		len(block.TexCoords)*8 +
@@ -43,15 +43,68 @@ func (block *Mesh) GetSize() int {
 		len(block.Triangles)*12
 }
 
+// ReadMesh reads a REX mesh
+func ReadMesh(r io.Reader, hdr DataBlockHeader) (*Mesh, error) {
+
+	var rexMesh struct {
+		Lod, MaxLod                                           uint16
+		NrCoords, NrNormals, NrTexCoords, NrColors            uint32
+		NrTriangles                                           uint32
+		StartCoords, StartNormals, StartTexCoords, StartColor uint32
+		StartTriangles                                        uint32
+		MaterialID                                            uint64
+		NameSize                                              uint16
+		Name                                                  [74]byte
+	}
+	if err := binary.Read(r, binary.LittleEndian, &rexMesh); err != nil {
+		return nil, fmt.Errorf("Reading MeshHeader failed: %v", err)
+	}
+
+	var mesh Mesh
+	mesh.Name = string(rexMesh.Name[:rexMesh.NameSize])
+
+	// Read coordinates
+	mesh.Coords = make([]mgl32.Vec3, rexMesh.NrCoords)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Coords); err != nil {
+		return nil, fmt.Errorf("Reading coords failed: %v", err)
+	}
+
+	// Read normals
+	mesh.Normals = make([]mgl32.Vec3, rexMesh.NrNormals)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Normals); err != nil {
+		return nil, fmt.Errorf("Reading normals failed: %v", err)
+	}
+
+	// Read texture
+	mesh.TexCoords = make([]mgl32.Vec2, rexMesh.NrTexCoords)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.TexCoords); err != nil {
+		return nil, fmt.Errorf("Reading texture failed: %v", err)
+	}
+
+	// Read color
+	mesh.Colors = make([]mgl32.Vec3, rexMesh.NrColors)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Colors); err != nil {
+		return nil, fmt.Errorf("Reading colors failed: %v", err)
+	}
+
+	// Read triangles
+	mesh.Triangles = make([]Triangle, rexMesh.NrTriangles)
+	if err := binary.Read(r, binary.LittleEndian, &mesh.Triangles); err != nil {
+		return nil, fmt.Errorf("Reading triangles failed: %v", err)
+	}
+
+	mesh.MaterialID = rexMesh.MaterialID
+
+	return &mesh, nil
+}
+
 // Write writes the mesh to the given writer
-func (block *Mesh) Write(w io.Writer) (int, error) {
+func (block *Mesh) Write(w io.Writer) error {
 
 	// return if nothing needs to be written
 	if len(block.Coords) == 0 {
-		return 0, nil
+		return nil
 	}
-
-	buf := new(bytes.Buffer)
 
 	startCoords := meshHeaderSize
 	startNormals := meshHeaderSize + len(block.Coords)*12
@@ -64,8 +117,17 @@ func (block *Mesh) Write(w io.Writer) (int, error) {
 		nameMaxLen = meshNameMaxSize
 	}
 
+	err := WriteDataBlockHeader(w, DataBlockHeader{
+		Type:    typeMesh,
+		Version: meshBlockVersion,
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
+		ID:      block.ID,
+	})
+	if err != nil {
+		return err
+	}
+
 	var data = []interface{}{
-		GetDataBlockHeader(typeMesh, meshBlockVersion, block.ID, block.GetSize()),
 		uint16(0), /* lod */
 		uint16(0), /* maxLod */
 		uint32(len(block.Coords)),
@@ -82,54 +144,54 @@ func (block *Mesh) Write(w io.Writer) (int, error) {
 		uint16(len(block.Name)),
 	}
 	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
 	// Name
-	err := binary.Write(buf, binary.LittleEndian, []byte(block.Name[:nameMaxLen]))
+	err = binary.Write(w, binary.LittleEndian, []byte(block.Name[:nameMaxLen]))
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	for i := 0; i < meshNameMaxSize-nameMaxLen; i++ {
-		binary.Write(buf, binary.LittleEndian, false)
+		binary.Write(w, binary.LittleEndian, false)
 	}
 
 	// Coords
 	for _, c := range block.Coords {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// Normals
 	for _, c := range block.Normals {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// TexCoords
 	for _, c := range block.TexCoords {
-		writeVec2(buf, c)
+		writeVec2(w, c)
 	}
 	// Colors
 	for _, c := range block.Colors {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// Triangles
 	for _, t := range block.Triangles {
-		err := binary.Write(buf, binary.LittleEndian, t.V0)
+		err := binary.Write(w, binary.LittleEndian, t.V0)
 		if err != nil {
 			panic("Error during binary writing V0")
 		}
-		err = binary.Write(buf, binary.LittleEndian, t.V1)
+		err = binary.Write(w, binary.LittleEndian, t.V1)
 		if err != nil {
 			panic("Error during binary writing V1")
 		}
-		err = binary.Write(buf, binary.LittleEndian, t.V2)
+		err = binary.Write(w, binary.LittleEndian, t.V2)
 		if err != nil {
 			panic("Error during binary writing V2")
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }
 
 func writeVec2(w io.Writer, v mgl32.Vec2) {
@@ -156,4 +218,31 @@ func writeVec3(w io.Writer, v mgl32.Vec3) {
 	if err != nil {
 		panic("Error during binary writing Vec3")
 	}
+}
+
+// String nicely print mesh
+func (m Mesh) String() string {
+
+	s := fmt.Sprintf("\n")
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
+	s += fmt.Sprintf("| Mesh datablock                                             |\n")
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
+	s += fmt.Sprintf("| Name           | %-41s |\n", m.Name)
+	s += fmt.Sprintf("| MaterialID     | %-41d |\n", m.MaterialID)
+	s += fmt.Sprintf("| # Coords       | %-41d |\n", len(m.Coords))
+	s += fmt.Sprintf("| # Normals      | %-41d |\n", len(m.Normals))
+	s += fmt.Sprintf("| # Colors       | %-41d |\n", len(m.Colors))
+	s += fmt.Sprintf("| # Triangle     | %-41d |\n", len(m.Triangles))
+	s += fmt.Sprintf("\n--- Coordinates\n\n")
+
+	for _, c := range m.Coords {
+		s += fmt.Sprintf(" %5v \n", c)
+	}
+	s += fmt.Sprintf("\n--- Triangles\n\n")
+	for _, c := range m.Triangles {
+		s += fmt.Sprintf(" %5v \n", c)
+	}
+	s += fmt.Sprintf("|------------------------------------------------------------|\n")
+
+	return s
 }

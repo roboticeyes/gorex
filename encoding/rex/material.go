@@ -1,8 +1,8 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -26,18 +26,65 @@ type Material struct {
 	Alpha       float32 // 1 is full opaque
 }
 
+// NewMaterial creates a new default material
+func NewMaterial(id uint64) Material {
+	return Material{
+		ID:    id,
+		KaRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		KdRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		KsRgb: mgl32.Vec3{0.8, 0.8, 0.8},
+		Alpha: 1,
+	}
+}
+
 // GetSize returns the estimated size of the block in bytes
 func (block *Material) GetSize() int {
-	return totalHeaderSize + materialStandardSize
+	return rexDataBlockHeaderSize + materialStandardSize
+}
+
+// ReadMaterial reads a REX material
+func ReadMaterial(r io.Reader, hdr DataBlockHeader) (*Material, error) {
+
+	var rexMaterial struct {
+		KaRed, KaGreen, KaBlue float32
+		KaTextureID            uint64
+		KdRed, KdGreen, KdBlue float32
+		KdTextureID            uint64
+		KsRed, KsGreen, KsBlue float32
+		KsTextureID            uint64
+		Ns                     float32
+		Alpha                  float32
+	}
+	if err := binary.Read(r, binary.LittleEndian, &rexMaterial); err != nil {
+		return nil, fmt.Errorf("Reading material failed")
+	}
+
+	return &Material{
+		KaRgb:       mgl32.Vec3{rexMaterial.KaRed, rexMaterial.KaGreen, rexMaterial.KaBlue},
+		KaTextureID: rexMaterial.KaTextureID,
+		KdRgb:       mgl32.Vec3{rexMaterial.KdRed, rexMaterial.KdGreen, rexMaterial.KdBlue},
+		KdTextureID: rexMaterial.KdTextureID,
+		KsRgb:       mgl32.Vec3{rexMaterial.KsRed, rexMaterial.KsGreen, rexMaterial.KsBlue},
+		KsTextureID: rexMaterial.KsTextureID,
+		Ns:          rexMaterial.Ns,
+		Alpha:       rexMaterial.Alpha,
+	}, nil
 }
 
 // Write writes the material to the given writer
-func (block *Material) Write(w io.Writer) (int, error) {
+func (block *Material) Write(w io.Writer) error {
 
-	buf := new(bytes.Buffer)
+	err := WriteDataBlockHeader(w, DataBlockHeader{
+		Type:    typeMaterial,
+		Version: materialBlockVersion,
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
+		ID:      block.ID,
+	})
+	if err != nil {
+		return err
+	}
 
 	var data = []interface{}{
-		GetDataBlockHeader(typeMaterial, materialBlockVersion, block.ID, block.GetSize()),
 		float32(block.KaRgb.X()),
 		float32(block.KaRgb.Y()),
 		float32(block.KaRgb.Z()),
@@ -57,10 +104,10 @@ func (block *Material) Write(w io.Writer) (int, error) {
 		float32(block.Alpha),
 	}
 	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }

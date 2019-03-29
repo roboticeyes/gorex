@@ -1,8 +1,8 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -21,58 +21,93 @@ type PointList struct {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *PointList) GetSize() int {
-	return totalHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
+	return rexDataBlockHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
+}
+
+// ReadPointList reads a REX material
+func ReadPointList(r io.Reader, hdr DataBlockHeader) (*PointList, error) {
+
+	var nrVertices, nrColors uint32
+
+	if err := binary.Read(r, binary.LittleEndian, &nrVertices); err != nil {
+		return nil, fmt.Errorf("Reading failed: %v ", err)
+	}
+
+	if err := binary.Read(r, binary.LittleEndian, &nrColors); err != nil {
+		return nil, fmt.Errorf("Reading failed: %v ", err)
+	}
+
+	var pointList PointList
+
+	pointList.Points = make([]mgl32.Vec3, nrVertices)
+	if err := binary.Read(r, binary.LittleEndian, &pointList.Points); err != nil {
+		return nil, fmt.Errorf("Reading coords failed: %v", err)
+	}
+
+	pointList.Colors = make([]mgl32.Vec3, nrColors)
+	if err := binary.Read(r, binary.LittleEndian, &pointList.Colors); err != nil {
+		return nil, fmt.Errorf("Reading colors failed: %v", err)
+	}
+	return &pointList, nil
 }
 
 // Write writes the pointlist to the given writer
-func (block *PointList) Write(w io.Writer) (int, error) {
+func (block *PointList) Write(w io.Writer) error {
 
 	// return if nothing needs to be written
 	if len(block.Points) == 0 {
-		return 0, nil
+		return nil
 	}
 
-	buf := new(bytes.Buffer)
+	err := WriteDataBlockHeader(w, DataBlockHeader{
+		Type:    typePointList,
+		Version: pointListBlockVersion,
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
+		ID:      block.ID,
+	})
+	if err != nil {
+		return err
+	}
+
 	var data = []interface{}{
-		GetDataBlockHeader(typePointList, pointListBlockVersion, block.ID, block.GetSize()),
 		uint32(len(block.Points)),
 		uint32(len(block.Colors)),
 	}
 	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 	// Points
 	for _, p := range block.Points {
-		err := binary.Write(buf, binary.LittleEndian, p.X())
+		err := binary.Write(w, binary.LittleEndian, p.X())
 		if err != nil {
-			return 0, err
+			return err
 		}
-		err = binary.Write(buf, binary.LittleEndian, p.Y())
+		err = binary.Write(w, binary.LittleEndian, p.Y())
 		if err != nil {
-			return 0, err
+			return err
 		}
-		err = binary.Write(buf, binary.LittleEndian, p.Z())
+		err = binary.Write(w, binary.LittleEndian, p.Z())
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 	// Colors
 	for _, c := range block.Colors {
-		err := binary.Write(buf, binary.LittleEndian, c.X() /* red */)
+		err := binary.Write(w, binary.LittleEndian, c.X() /* red */)
 		if err != nil {
-			return 0, err
+			return err
 		}
-		err = binary.Write(buf, binary.LittleEndian, c.Y() /* green */)
+		err = binary.Write(w, binary.LittleEndian, c.Y() /* green */)
 		if err != nil {
-			return 0, err
+			return err
 		}
-		err = binary.Write(buf, binary.LittleEndian, c.Z() /* blue */)
+		err = binary.Write(w, binary.LittleEndian, c.Z() /* blue */)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }
