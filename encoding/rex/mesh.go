@@ -102,14 +102,12 @@ func ReadMesh(buf []byte) (*Mesh, error) {
 }
 
 // Write writes the mesh to the given writer
-func (block *Mesh) Write(w io.Writer) (int, error) {
+func (block *Mesh) Write(w io.Writer) error {
 
 	// return if nothing needs to be written
 	if len(block.Coords) == 0 {
-		return 0, nil
+		return nil
 	}
-
-	buf := new(bytes.Buffer)
 
 	startCoords := meshHeaderSize
 	startNormals := meshHeaderSize + len(block.Coords)*12
@@ -122,8 +120,17 @@ func (block *Mesh) Write(w io.Writer) (int, error) {
 		nameMaxLen = meshNameMaxSize
 	}
 
+	err := WriteDataBlockHeader(w, DataBlockHeader{
+		Type:    typeMesh,
+		Version: meshBlockVersion,
+		Size:    uint32(block.GetSize() - totalHeaderSize),
+		ID:      block.ID,
+	})
+	if err != nil {
+		return err
+	}
+
 	var data = []interface{}{
-		GetDataBlockHeader(typeMesh, meshBlockVersion, block.ID, block.GetSize()),
 		uint16(0), /* lod */
 		uint16(0), /* maxLod */
 		uint32(len(block.Coords)),
@@ -140,54 +147,54 @@ func (block *Mesh) Write(w io.Writer) (int, error) {
 		uint16(len(block.Name)),
 	}
 	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
 	// Name
-	err := binary.Write(buf, binary.LittleEndian, []byte(block.Name[:nameMaxLen]))
+	err = binary.Write(w, binary.LittleEndian, []byte(block.Name[:nameMaxLen]))
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	for i := 0; i < meshNameMaxSize-nameMaxLen; i++ {
-		binary.Write(buf, binary.LittleEndian, false)
+		binary.Write(w, binary.LittleEndian, false)
 	}
 
 	// Coords
 	for _, c := range block.Coords {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// Normals
 	for _, c := range block.Normals {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// TexCoords
 	for _, c := range block.TexCoords {
-		writeVec2(buf, c)
+		writeVec2(w, c)
 	}
 	// Colors
 	for _, c := range block.Colors {
-		writeVec3(buf, c)
+		writeVec3(w, c)
 	}
 	// Triangles
 	for _, t := range block.Triangles {
-		err := binary.Write(buf, binary.LittleEndian, t.V0)
+		err := binary.Write(w, binary.LittleEndian, t.V0)
 		if err != nil {
 			panic("Error during binary writing V0")
 		}
-		err = binary.Write(buf, binary.LittleEndian, t.V1)
+		err = binary.Write(w, binary.LittleEndian, t.V1)
 		if err != nil {
 			panic("Error during binary writing V1")
 		}
-		err = binary.Write(buf, binary.LittleEndian, t.V2)
+		err = binary.Write(w, binary.LittleEndian, t.V2)
 		if err != nil {
 			panic("Error during binary writing V2")
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }
 
 func writeVec2(w io.Writer, v mgl32.Vec2) {

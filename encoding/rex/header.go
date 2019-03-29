@@ -1,7 +1,6 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -36,7 +35,7 @@ type Header struct {
 type DataBlockHeader struct {
 	Type    uint16
 	Version uint16
-	Size    uint32
+	Size    uint32 // the Size is the size of the data block w/o the data block header
 	ID      uint64
 }
 
@@ -57,8 +56,7 @@ func CreateHeader() *Header {
 }
 
 // Write converts the REX header and a dummy CSR and writes it to the given writer
-func (h *Header) Write(w io.Writer) (int, error) {
-	buf := new(bytes.Buffer)
+func (h *Header) Write(w io.Writer) error {
 
 	var header = []interface{}{
 		h.Magic,
@@ -77,12 +75,12 @@ func (h *Header) Write(w io.Writer) (int, error) {
 		float32(0.0),
 	}
 	for _, v := range header {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }
 
 // ReadHeader reads the REX header from a given file
@@ -118,27 +116,9 @@ func ReadDataBlockHeader(r io.Reader) (DataBlockHeader, error) {
 	return hdr, nil
 }
 
-// GetDataBlockHeader returns a new data block header,
-// where `sz` denotes the total size of the data block including
-// the data block header size (TotalHeaderSize)
-func GetDataBlockHeader(blockType, version uint16, blockID uint64, sz int) []byte {
-
-	buf := new(bytes.Buffer)
-	var data = []interface{}{
-		uint16(blockType),
-		uint16(version),
-		uint32(sz - totalHeaderSize),
-		uint64(blockID),
-	}
-
-	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return buf.Bytes()
+// WriteDataBlockHeader writes the given data block header to the writer
+func WriteDataBlockHeader(w io.Writer, hdr DataBlockHeader) error {
+	return binary.Write(w, binary.LittleEndian, &hdr)
 }
 
 // String nicely print header

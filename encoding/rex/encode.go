@@ -17,39 +17,33 @@ func NewEncoder(w io.Writer) *Encoder {
 // Encode encodes a given REX file buffer into the writer stream.
 // The function returns the number of bytes being written to the writer
 // and nil if no error occurs.
-func (enc *Encoder) Encode(r File) (int, error) {
+func (enc *Encoder) Encode(r File) error {
 
-	var total int
-
-	n, err := r.Header().Write(enc.w)
-	total += n
+	err := r.Header().Write(enc.w)
 
 	// Write PointLists
 	for _, p := range r.PointLists {
-		n, err = p.Write(enc.w)
-		total += p.GetSize()
+		err = p.Write(enc.w)
 		if err != nil {
-			return total, err
+			return err
 		}
 	}
 
 	// Write Meshes
 	for _, m := range r.Meshes {
-		n, err = m.Write(enc.w)
-		total += m.GetSize()
+		err = m.Write(enc.w)
 		if err != nil {
-			return total, err
+			return err
 		}
 	}
 
 	// Write Materials
 	for _, m := range r.Materials {
-		n, err = m.Write(enc.w)
-		total += m.GetSize()
+		err = m.Write(enc.w)
 		if err != nil {
-			return total, err
+			return err
 		}
 	}
 
-	return total, nil
+	return nil
 }

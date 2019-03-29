@@ -23,13 +23,9 @@ func TestWriteImage(t *testing.T) {
 
 	var buf []byte
 	w := bytes.NewBuffer(buf)
-	n, err := img.Write(w)
+	err = img.Write(w)
 	if err != nil {
 		t.Fatal("Error: ", err)
-	}
-	sz := len(b) + 16 + 4
-	if sz != n {
-		t.Fatalf("Size does not match expected=%d actual=%d\n", sz, n)
 	}
 }
 

@@ -75,12 +75,19 @@ func ReadMaterial(buf []byte) (*Material, error) {
 }
 
 // Write writes the material to the given writer
-func (block *Material) Write(w io.Writer) (int, error) {
+func (block *Material) Write(w io.Writer) error {
 
-	buf := new(bytes.Buffer)
+	err := WriteDataBlockHeader(w, DataBlockHeader{
+		Type:    typeMaterial,
+		Version: materialBlockVersion,
+		Size:    uint32(block.GetSize() - totalHeaderSize),
+		ID:      block.ID,
+	})
+	if err != nil {
+		return err
+	}
 
 	var data = []interface{}{
-		GetDataBlockHeader(typeMaterial, materialBlockVersion, block.ID, block.GetSize()),
 		float32(block.KaRgb.X()),
 		float32(block.KaRgb.Y()),
 		float32(block.KaRgb.Z()),
@@ -100,10 +107,10 @@ func (block *Material) Write(w io.Writer) (int, error) {
 		float32(block.Alpha),
 	}
 	for _, v := range data {
-		err := binary.Write(buf, binary.LittleEndian, v)
+		err := binary.Write(w, binary.LittleEndian, v)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
-	return w.Write(buf.Bytes())
+	return nil
 }
