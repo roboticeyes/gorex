@@ -35,11 +35,8 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 		}
 
 		switch hdr.Type {
-		case typeImage:
-			image, err := ReadImage(dec.r, hdr)
-			if err == nil {
-				file.Images = append(file.Images, *image)
-			}
+		// case typeLineSet:
+		// case typeText:
 		case typePointList:
 			pointList, err := ReadPointList(dec.r, hdr)
 			if err == nil {
@@ -49,6 +46,11 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			mesh, err := ReadMesh(dec.r, hdr)
 			if err == nil {
 				file.Meshes = append(file.Meshes, *mesh)
+			}
+		case typeImage:
+			image, err := ReadImage(dec.r, hdr)
+			if err == nil {
+				file.Images = append(file.Images, *image)
 			}
 		case typeMaterial:
 			material, err := ReadMaterial(dec.r, hdr)

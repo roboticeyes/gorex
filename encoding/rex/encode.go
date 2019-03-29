@@ -45,5 +45,13 @@ func (enc *Encoder) Encode(r File) error {
 		}
 	}
 
+	// Write Images
+	for _, i := range r.Images {
+		err = i.Write(enc.w)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

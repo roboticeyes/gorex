@@ -2,7 +2,7 @@ package rex
 
 import (
 	"bytes"
-	"os"
+	// "os"
 	"testing"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -91,7 +91,7 @@ func TestEncodingMeshAndMaterial(t *testing.T) {
 		t.Fatalf("TEST ERROR: %v", err)
 	}
 
-	f, _ := os.Create("mesh.rex")
-	f.Write(buf.Bytes())
-	defer f.Close()
+	// f, _ := os.Create("mesh.rex")
+	// f.Write(buf.Bytes())
+	// defer f.Close()
 }
