@@ -105,12 +105,12 @@ fmt.Println(project)
 
 # Todos
 
-## REX File
+## REX File IO
 
 * [x] Data block point list
 * [x] Data block mesh
 * [x] Data block material
-* [ ] Data block image
+* [x] Data block image
 * [ ] Data block line set
 * [ ] Data block text
 
