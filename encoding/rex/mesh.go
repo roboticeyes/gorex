@@ -35,7 +35,7 @@ type Mesh struct {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *Mesh) GetSize() int {
-	return totalHeaderSize + meshHeaderSize +
+	return rexDataBlockHeaderSize + meshHeaderSize +
 		len(block.Coords)*12 +
 		len(block.Normals)*12 +
 		len(block.TexCoords)*8 +
@@ -57,7 +57,7 @@ func ReadMesh(r io.Reader, hdr DataBlockHeader) (*Mesh, error) {
 		Name                                                  [74]byte
 	}
 	if err := binary.Read(r, binary.LittleEndian, &rexMesh); err != nil {
-		fmt.Println("Reading MeshHeader failed: ", err)
+		return nil, fmt.Errorf("Reading MeshHeader failed: %v", err)
 	}
 
 	var mesh Mesh
@@ -66,31 +66,31 @@ func ReadMesh(r io.Reader, hdr DataBlockHeader) (*Mesh, error) {
 	// Read coordinates
 	mesh.Coords = make([]mgl32.Vec3, rexMesh.NrCoords)
 	if err := binary.Read(r, binary.LittleEndian, &mesh.Coords); err != nil {
-		fmt.Println("Reading coords failed: ", err)
+		return nil, fmt.Errorf("Reading coords failed: %v", err)
 	}
 
 	// Read normals
 	mesh.Normals = make([]mgl32.Vec3, rexMesh.NrNormals)
 	if err := binary.Read(r, binary.LittleEndian, &mesh.Normals); err != nil {
-		fmt.Println("Reading normals failed: ", err)
+		return nil, fmt.Errorf("Reading normals failed: %v", err)
 	}
 
 	// Read texture
 	mesh.TexCoords = make([]mgl32.Vec2, rexMesh.NrTexCoords)
 	if err := binary.Read(r, binary.LittleEndian, &mesh.TexCoords); err != nil {
-		fmt.Println("Reading texture failed: ", err)
+		return nil, fmt.Errorf("Reading texture failed: %v", err)
 	}
 
 	// Read color
 	mesh.Colors = make([]mgl32.Vec3, rexMesh.NrColors)
 	if err := binary.Read(r, binary.LittleEndian, &mesh.Colors); err != nil {
-		fmt.Println("Reading colors failed: ", err)
+		return nil, fmt.Errorf("Reading colors failed: %v", err)
 	}
 
 	// Read triangles
 	mesh.Triangles = make([]Triangle, rexMesh.NrTriangles)
 	if err := binary.Read(r, binary.LittleEndian, &mesh.Triangles); err != nil {
-		fmt.Println("Reading triangles failed: ", err)
+		return nil, fmt.Errorf("Reading triangles failed: %v", err)
 	}
 
 	mesh.MaterialID = rexMesh.MaterialID
@@ -120,7 +120,7 @@ func (block *Mesh) Write(w io.Writer) error {
 	err := WriteDataBlockHeader(w, DataBlockHeader{
 		Type:    typeMesh,
 		Version: meshBlockVersion,
-		Size:    uint32(block.GetSize() - totalHeaderSize),
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
 		ID:      block.ID,
 	})
 	if err != nil {

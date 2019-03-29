@@ -25,7 +25,7 @@ type Image struct {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *Image) GetSize() int {
-	return totalHeaderSize + 4 + len(block.Data)
+	return rexDataBlockHeaderSize + 4 + len(block.Data)
 }
 
 // ReadImage reads a REX image w/o block header
@@ -40,13 +40,13 @@ func ReadImage(r io.Reader, hdr DataBlockHeader) (*Image, error) {
 
 	image := Image{ID: hdr.ID}
 	if err := binary.Read(r, binary.LittleEndian, &image.Compression); err != nil {
-		fmt.Println("Reading compression failed: ", err)
+		return nil, fmt.Errorf("Reading compression failed")
 	}
 
 	image.Data = make([]byte, hdr.Size-4)
 
 	if err := binary.Read(r, binary.LittleEndian, &image.Data); err != nil {
-		fmt.Println("Reading Image failed: ", err)
+		return nil, fmt.Errorf("Reading image failed")
 	}
 
 	return &image, nil
@@ -58,7 +58,7 @@ func (block *Image) Write(w io.Writer) error {
 	err := WriteDataBlockHeader(w, DataBlockHeader{
 		Type:    typeImage,
 		Version: imageBlockVersion,
-		Size:    uint32(block.GetSize() - totalHeaderSize),
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
 		ID:      block.ID,
 	})
 	if err != nil {

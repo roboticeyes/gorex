@@ -39,7 +39,7 @@ func NewMaterial(id uint64) Material {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *Material) GetSize() int {
-	return totalHeaderSize + materialStandardSize
+	return rexDataBlockHeaderSize + materialStandardSize
 }
 
 // ReadMaterial reads a REX material
@@ -56,7 +56,7 @@ func ReadMaterial(r io.Reader, hdr DataBlockHeader) (*Material, error) {
 		Alpha                  float32
 	}
 	if err := binary.Read(r, binary.LittleEndian, &rexMaterial); err != nil {
-		fmt.Println("Reading Material failed: ", err)
+		return nil, fmt.Errorf("Reading material failed")
 	}
 
 	return &Material{
@@ -77,7 +77,7 @@ func (block *Material) Write(w io.Writer) error {
 	err := WriteDataBlockHeader(w, DataBlockHeader{
 		Type:    typeMaterial,
 		Version: materialBlockVersion,
-		Size:    uint32(block.GetSize() - totalHeaderSize),
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
 		ID:      block.ID,
 	})
 	if err != nil {

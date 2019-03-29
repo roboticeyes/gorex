@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	rexFileHeaderSize = 64
-	totalHeaderSize   = 16
+	rexFileHeaderSize      = 64
+	rexDataBlockHeaderSize = 16
 
+	// Supported block types
 	typeLineSet          = 0
 	typeText             = 1
 	typePointList        = 2
@@ -88,7 +89,6 @@ func ReadHeader(r io.Reader) (*Header, error) {
 
 	var header Header
 	if err := binary.Read(r, binary.LittleEndian, &header); err != nil {
-		fmt.Println("ReadHeader failed:", err)
 		return &Header{}, fmt.Errorf("Error during reading header %v", err)
 	}
 

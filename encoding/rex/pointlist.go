@@ -21,7 +21,7 @@ type PointList struct {
 
 // GetSize returns the estimated size of the block in bytes
 func (block *PointList) GetSize() int {
-	return totalHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
+	return rexDataBlockHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
 }
 
 // ReadPointList reads a REX material
@@ -62,7 +62,7 @@ func (block *PointList) Write(w io.Writer) error {
 	err := WriteDataBlockHeader(w, DataBlockHeader{
 		Type:    typePointList,
 		Version: pointListBlockVersion,
-		Size:    uint32(block.GetSize() - totalHeaderSize),
+		Size:    uint32(block.GetSize() - rexDataBlockHeaderSize),
 		ID:      block.ID,
 	})
 	if err != nil {

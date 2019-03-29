@@ -3,7 +3,6 @@ package rex
 import (
 	"bytes"
 	b64 "encoding/base64"
-	"fmt"
 	"testing"
 )
 
@@ -22,7 +21,7 @@ func TestDecodingHeader(t *testing.T) {
 		t.Fatalf("TEST ERROR: %v", err)
 	}
 	if rex == nil {
-		fmt.Println("rex file is nil")
+		t.Fatalf("REX file is nil")
 	}
 
 	if header.SizeBytes != 276 {
