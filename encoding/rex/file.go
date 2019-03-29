@@ -12,6 +12,7 @@ type File struct {
 	PointLists []PointList
 	Meshes     []Mesh
 	Materials  []Material
+	Images     []Image
 }
 
 // Header generates a proper header for the File datastructure
@@ -30,6 +31,11 @@ func (f *File) Header() *Header {
 	}
 
 	for _, b := range f.Materials {
+		header.NrBlocks++
+		header.SizeBytes += (uint64)(b.GetSize())
+	}
+
+	for _, b := range f.Images {
 		header.NrBlocks++
 		header.SizeBytes += (uint64)(b.GetSize())
 	}

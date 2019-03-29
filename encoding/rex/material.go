@@ -1,7 +1,6 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -44,9 +43,7 @@ func (block *Material) GetSize() int {
 }
 
 // ReadMaterial reads a REX material
-func ReadMaterial(buf []byte) (*Material, error) {
-
-	r := bytes.NewReader(buf)
+func ReadMaterial(r io.Reader, hdr DataBlockHeader) (*Material, error) {
 
 	var rexMaterial struct {
 		KaRed, KaGreen, KaBlue float32

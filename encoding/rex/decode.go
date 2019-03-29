@@ -1,7 +1,6 @@
 package rex
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -28,43 +27,36 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 	file := &File{}
 
 	for {
-		var blockType, version uint16
-		var sz uint32
-		var id uint64
-		if err := binary.Read(dec.r, binary.LittleEndian, &blockType); err != nil {
-			if err == io.EOF {
-				return header, file, nil
+		hdr, err := ReadDataBlockHeader(dec.r)
+		if err == io.EOF {
+			return header, file, nil
+		} else if err != nil {
+			return header, nil, err
+		}
+
+		switch hdr.Type {
+		case typeImage:
+			image, err := ReadImage(dec.r, hdr)
+			if err == nil {
+				file.Images = append(file.Images, *image)
 			}
-			return header, nil, err
-		}
-		if err := binary.Read(dec.r, binary.LittleEndian, &version); err != nil {
-			return header, nil, err
-		}
-		if err := binary.Read(dec.r, binary.LittleEndian, &sz); err != nil {
-			return header, nil, err
-		}
-		if err := binary.Read(dec.r, binary.LittleEndian, &id); err != nil {
-			return header, nil, err
-		}
-
-		// read block
-		buf, err := readBlock(dec.r, sz)
-
-		switch blockType {
+		case typePointList:
+			pointList, err := ReadPointList(dec.r, hdr)
+			if err == nil {
+				file.PointLists = append(file.PointLists, *pointList)
+			}
 		case typeMesh:
-			mesh, err := ReadMesh(buf)
-			mesh.ID = id
+			mesh, err := ReadMesh(dec.r, hdr)
 			if err == nil {
 				file.Meshes = append(file.Meshes, *mesh)
 			}
 		case typeMaterial:
-			material, err := ReadMaterial(buf)
-			material.ID = id
+			material, err := ReadMaterial(dec.r, hdr)
 			if err == nil {
 				file.Materials = append(file.Materials, *material)
 			}
 		default:
-			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", blockType, version, sz, id)
+			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", hdr.Type, hdr.Version, hdr.Size, hdr.ID)
 		}
 
 		if err == io.EOF {
@@ -73,12 +65,4 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			return header, nil, err
 		}
 	}
-}
-
-func readBlock(r io.Reader, n uint32) ([]byte, error) {
-	buf := make([]byte, n)
-	if err := binary.Read(r, binary.LittleEndian, &buf); err != nil {
-		return nil, err
-	}
-	return buf, nil
 }

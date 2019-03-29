@@ -1,7 +1,6 @@
 package rex
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -45,9 +44,7 @@ func (block *Mesh) GetSize() int {
 }
 
 // ReadMesh reads a REX mesh
-func ReadMesh(buf []byte) (*Mesh, error) {
-
-	r := bytes.NewReader(buf)
+func ReadMesh(r io.Reader, hdr DataBlockHeader) (*Mesh, error) {
 
 	var rexMesh struct {
 		Lod, MaxLod                                           uint16

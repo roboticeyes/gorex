@@ -2,6 +2,7 @@ package rex
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -21,6 +22,33 @@ type PointList struct {
 // GetSize returns the estimated size of the block in bytes
 func (block *PointList) GetSize() int {
 	return totalHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
+}
+
+// ReadPointList reads a REX material
+func ReadPointList(r io.Reader, hdr DataBlockHeader) (*PointList, error) {
+
+	var nrVertices, nrColors uint32
+
+	if err := binary.Read(r, binary.LittleEndian, &nrVertices); err != nil {
+		return nil, fmt.Errorf("Reading failed: %v ", err)
+	}
+
+	if err := binary.Read(r, binary.LittleEndian, &nrColors); err != nil {
+		return nil, fmt.Errorf("Reading failed: %v ", err)
+	}
+
+	var pointList PointList
+
+	pointList.Points = make([]mgl32.Vec3, nrVertices)
+	if err := binary.Read(r, binary.LittleEndian, &pointList.Points); err != nil {
+		return nil, fmt.Errorf("Reading coords failed: %v", err)
+	}
+
+	pointList.Colors = make([]mgl32.Vec3, nrColors)
+	if err := binary.Read(r, binary.LittleEndian, &pointList.Colors); err != nil {
+		return nil, fmt.Errorf("Reading colors failed: %v", err)
+	}
+	return &pointList, nil
 }
 
 // Write writes the pointlist to the given writer
