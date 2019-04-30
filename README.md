@@ -65,7 +65,7 @@ valid user credentials.
 
 ## rxv - REX file viewer
 
-`rxv` is a simple 3D viewer for REX files on your desktop. It uses the great render engine [g3n](https://github.com/g3n/g3nd).
+`rxv` is a simple 3D viewer for REX files on your desktop. It uses the great render engine [g3n](https://github.com/g3n/engine).
 
 ```sh
 cd cmd/rxv
