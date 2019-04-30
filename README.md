@@ -41,13 +41,14 @@ import (
 )
 ```
 
-## rxc
+## rxc - rexOS cli client
 
 `rxc` is a command line tool to work with rexOS on your command line. You can build the  `rxc` command line toole by
 
-```go
+```sh
 cd cmd/rxc
 go build
+./rxc
 ```
 
 `rxc` uses environment variables to define the REX domain and user credentials, you need to set the following
@@ -61,6 +62,16 @@ REX_CLIENT_SECRET=<your client secret>
 
 Please check our [documentation](https://support.robotic-eyes.com/rest/index.html#overview-authentication) to generate
 valid user credentials.
+
+## rxv - REX file viewer
+
+`rxv` is a simple 3D viewer for REX files on your desktop. It uses the great render engine [g3n](https://github.com/g3n/g3nd).
+
+```sh
+cd cmd/rxv
+go build
+./rxv cube.rex
+```
 
 ## Register an account
 

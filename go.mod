@@ -2,7 +2,10 @@ module github.com/roboticeyes/gorex
 
 require (
 	github.com/breiting/socketcluster-client-go v1.0.1
+	github.com/g3n/engine v0.0.0-20190314190124-70eaa04e801c
+	github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1 // indirect
 	github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/rgamba/evtwebsocket v0.0.0-20181029234908-48b8cd9f8616 // indirect
@@ -16,4 +19,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
