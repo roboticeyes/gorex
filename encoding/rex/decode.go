@@ -1,6 +1,7 @@
 package rex
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 )
@@ -35,8 +36,12 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 		}
 
 		switch hdr.Type {
-		// case typeLineSet:
-		// case typeText:
+		case typeLineSet:
+			ls, err := ReadLineSet(dec.r, hdr)
+			if err == nil {
+				file.LineSets = append(file.LineSets, *ls)
+			}
+		// case typeText: TODO
 		case typePointList:
 			pointList, err := ReadPointList(dec.r, hdr)
 			if err == nil {
@@ -59,6 +64,12 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			}
 		default:
 			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", hdr.Type, hdr.Version, hdr.Size, hdr.ID)
+			// Read block from reader and ignore
+			ignore := make([]byte, hdr.Size)
+			if err := binary.Read(dec.r, binary.LittleEndian, &ignore); err != nil {
+				fmt.Printf("Reading of unknown data block failed")
+			}
+			file.UnknownBlocks++
 		}
 
 		if err == io.EOF {

@@ -9,16 +9,23 @@ const (
 // either be stored locally or sent to an arbirary writer with
 // the Encoder.
 type File struct {
-	PointLists []PointList
-	Meshes     []Mesh
-	Materials  []Material
-	Images     []Image
+	LineSets      []LineSet
+	PointLists    []PointList
+	Meshes        []Mesh
+	Materials     []Material
+	Images        []Image
+	UnknownBlocks uint
 }
 
 // Header generates a proper header for the File datastructure
 func (f *File) Header() *Header {
 
 	header := CreateHeader()
+
+	for _, b := range f.LineSets {
+		header.NrBlocks++
+		header.SizeBytes += (uint64)(b.GetSize())
+	}
 
 	for _, b := range f.PointLists {
 		header.NrBlocks++

@@ -21,6 +21,16 @@ func (enc *Encoder) Encode(r File) error {
 
 	err := r.Header().Write(enc.w)
 
+	// Write LineSet
+	for _, l := range r.LineSets {
+		err = l.Write(enc.w)
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO TEXT
+
 	// Write PointLists
 	for _, p := range r.PointLists {
 		err = p.Write(enc.w)

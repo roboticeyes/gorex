@@ -24,7 +24,7 @@ func (block *PointList) GetSize() int {
 	return rexDataBlockHeaderSize + 4 + 4 + len(block.Points)*12 + len(block.Colors)*12
 }
 
-// ReadPointList reads a REX material
+// ReadPointList reads the block
 func ReadPointList(r io.Reader, hdr DataBlockHeader) (*PointList, error) {
 
 	var nrVertices, nrColors uint32

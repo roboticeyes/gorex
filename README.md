@@ -111,7 +111,7 @@ fmt.Println(project)
 * [x] Data block mesh
 * [x] Data block material
 * [x] Data block image
-* [ ] Data block line set
+* [x] Data block line set
 * [ ] Data block text
 
 ## References
