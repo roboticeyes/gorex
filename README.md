@@ -41,7 +41,14 @@ import (
 )
 ```
 
-## rxc
+## Tools
+
+### rxi
+
+`rxi` is a simple command line tool which simply dumps REX file informations to the command line. It also allows to
+extract images from the file directly. For more information, please call `rxi` directly.
+
+### rxc
 
 `rxc` is a command line tool to work with rexOS on your command line. You can build the  `rxc` command line toole by
 
@@ -107,11 +114,6 @@ fmt.Println(project)
 
 ## REX File IO
 
-* [x] Data block point list
-* [x] Data block mesh
-* [x] Data block material
-* [x] Data block image
-* [x] Data block line set
 * [ ] Data block text
 
 ## References
