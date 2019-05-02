@@ -123,15 +123,5 @@ func WriteDataBlockHeader(w io.Writer, hdr DataBlockHeader) error {
 
 // String nicely print header
 func (h Header) String() string {
-
-	s := fmt.Sprintf("\n")
-	s += fmt.Sprintf("| MAGIC          | %-41s |\n", h.Magic)
-	s += fmt.Sprintf("| Version        | %-41d |\n", h.Version)
-	s += fmt.Sprintf("| CRC            | %-41d |\n", h.Crc)
-	s += fmt.Sprintf("| NrBlocks       | %-41d |\n", h.NrBlocks)
-	s += fmt.Sprintf("| StartAddr      | %-41d |\n", h.StartAddr)
-	s += fmt.Sprintf("| SizeBytes      | %-41d |\n", h.SizeBytes)
-	s += fmt.Sprintf("\n")
-
-	return s
+	return fmt.Sprintf("REX File (v%d, %d blocks, %d bytes)", h.Version, h.NrBlocks, h.SizeBytes)
 }
