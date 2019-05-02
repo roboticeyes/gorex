@@ -26,14 +26,18 @@ type Material struct {
 	Alpha       float32 // 1 is full opaque
 }
 
-// NewMaterial creates a new default material
+// NewMaterial creates a new default material (gray)
 func NewMaterial(id uint64) Material {
 	return Material{
-		ID:    id,
-		KaRgb: mgl32.Vec3{0.8, 0.8, 0.8},
-		KdRgb: mgl32.Vec3{0.8, 0.8, 0.8},
-		KsRgb: mgl32.Vec3{0.8, 0.8, 0.8},
-		Alpha: 1,
+		ID:          id,
+		KaRgb:       mgl32.Vec3{0.0, 0.0, 0.0},
+		KaTextureID: NotSpecified,
+		KdRgb:       mgl32.Vec3{0.8, 0.8, 0.8},
+		KdTextureID: NotSpecified,
+		KsRgb:       mgl32.Vec3{0.0, 0.0, 0.0},
+		KsTextureID: NotSpecified,
+		Ns:          64.0,
+		Alpha:       1,
 	}
 }
 
