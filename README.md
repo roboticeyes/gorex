@@ -43,6 +43,13 @@ import (
 
 ## Tools
 
+You can easily build all tools by using the provided `Makefile`.
+
+```
+make
+sudo make install
+```
+
 ### rxi
 
 `rxi` is a simple command line tool which simply dumps REX file informations to the command line. It also allows to
