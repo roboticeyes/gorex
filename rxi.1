@@ -1,0 +1,42 @@
+.TH rxi 1 rxi\-VERSION
+.SH NAME
+rxi \- rex file inspector
+.SH SYNOPSIS
+.B rxi
+.RB command
+.RB file.rex
+.SH DESCRIPTION
+rxi is a simple rex file inspector printing useful information about a .rex file. The full file specification can be
+taken from https://github.com/roboticeyes/openrex/blob/master/doc/rex-spec-v1.md.
+.P
+The rxi requires to get a command. The simplest command is info which displays the content of the given rex file. The
+output looks like the following:
+.P
+REX File (v1, 4 blocks, 768 bytes)
+.br
+Meshes (2)
+.br
+ID     #Vtx     #Tri     Material Name
+.br
+1        4        2            0
+.br
+3        8       12            2
+.br
+Materials (2)
+.br
+ID          Ambient          Diffuse         Specular    Ns Opacity TextureID (ADS)
+.br
+0, [1.00,1.00,1.00] [0.64,0.26,0.12] [0.08,0.05,0.50]  96.1    1.00 [-1,-1,-1]
+.br
+2, [1.00,1.00,1.00] [0.09,0.64,0.10] [0.50,0.50,0.50]  96.1    1.00 [-1,-1,-1]
+.SH COMMANDS
+.TP
+.B info, i
+shows all blocks for the given file
+.TP
+.B img ID
+extracts the given image and dumps the image file to stdout. You can easily pipe the command to an image viewer which
+takes input from stdin. E.g. rxi img 10 test.rex | feh - will directly open up the file in the image viewer feh.
+.P
+.SH SEE ALSO
+.BR rxi (1)

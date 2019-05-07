@@ -1,0 +1,43 @@
+.TH rxc 1 rxc\-VERSION
+.SH NAME
+rxc \- rexOS terminal client
+.SH SYNOPSIS
+.B rxc
+.RB command
+.SH DESCRIPTION
+rxc is a simple command line tool which allows to talk the rexOS cloud
+services. One of the most important features is to get a valid access token
+which can be used with lot of other tools and SDKs.
+.P
+In order to use rxc properly you need to have three different environment variables
+set properly:
+.TP
+.B REX_DOMAIN
+Sets the domain name of the rexOS system, typically you can set this to http://rex.robotic-eyes.com
+.TP
+.B REX_CLIENT_ID
+Sets the client ID which can be retrieved from the rexOS portal. Please take a look at our support
+page (https://support.robotic-eyes.com) for more details.
+.TP
+.B REX_CLIENT_SECRET_
+Sets the client secret which can be retrieved from the rexOS portal. Please take a look at our support
+page (https://support.robotic-eyes.com) for more details.
+.P
+Please make sure that you always call rxc login first in order to get a valid authentication token!
+.SH COMMANDS
+.TP
+.B login
+authenticates the user using the REX_CLIENT_ID and REX_CLIENT_SECRET, and stores the token information into a file
+called token.
+.TP
+.B ls
+lists all projects of the given user.
+.TP
+.B ls project_name
+lists more information about the given project name. If the project name contains spaces, you need to use quotation
+marks.
+.TP
+.B listen project_name
+registers a callback for a certain project. If the project gets changed then a message printed out to stdout.
+.SH SEE ALSO
+.BR rxi (1)
