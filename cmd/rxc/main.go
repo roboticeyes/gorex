@@ -24,6 +24,7 @@ rxc - command line client for rexOS
 
 actions:
 
+  rxi -v                    prints version
   rxc help                  print this help
 
   rxc login                 authenticate user and retrieve auth token
@@ -45,6 +46,10 @@ var (
 	rexClient    *rexos.RexClient
 	rexUser      *rexos.User
 	project      *rexos.Project
+	// Version string from ldflags
+	Version string
+	// Build string from ldflags
+	Build string
 )
 
 func init() {
@@ -59,24 +64,36 @@ func init() {
 	if os.Getenv("REX_CLIENT_SECRET") != "" {
 		clientSecret = os.Getenv("REX_CLIENT_SECRET")
 	}
-
-	printSettings()
 }
 
 // help prints the help text to stdout
 func help(exit int) {
 	fmt.Println(helpText)
+	printSettings()
 	os.Exit(exit)
 }
 
 func printSettings() {
-	fmt.Println("API           ", apiURL)
-	fmt.Println("SocketCluster ", scURL)
-	fmt.Println("ClientID:     ", clientID)
-	if clientSecret != "" {
-		fmt.Println("ClientSecret:  ********")
+	fmt.Printf("\nsettings:\n\n")
+	if apiURL != "" {
+		fmt.Println("  rexOS domain  ", apiURL)
 	} else {
-		fmt.Println("ClientSecret:  MISSING")
+		fmt.Println("  rexOS domain   MISSING")
+	}
+	if scURL != "" {
+		fmt.Println("  SocketCluster ", scURL)
+	} else {
+		fmt.Println("  SocketCluster  MISSING")
+	}
+	if clientID != "" {
+		fmt.Println("  ClientID      ", clientID)
+	} else {
+		fmt.Println("  ClientID       MISSING")
+	}
+	if clientSecret != "" {
+		fmt.Println("  ClientSecret   ********")
+	} else {
+		fmt.Println("  ClientSecret   MISSING")
 	}
 }
 
@@ -238,6 +255,9 @@ func main() {
 	switch action {
 	case "help":
 		help(0)
+	case "-v":
+		fmt.Printf("rxi v%s-%s\n", Version, Build)
+		os.Exit(0)
 	case "login":
 		login()
 	case "ls":

@@ -15,6 +15,10 @@ import (
 var (
 	rexHeader  *rex.Header
 	rexContent *rex.File
+	// Version string from ldflags
+	Version string
+	// Build string from ldflags
+	Build string
 )
 
 // the help text that gets displayed when something goes wrong or when you run
@@ -24,6 +28,7 @@ rxi - show REX file infos
 
 actions:
 
+  rxi -v                    prints version
   rxi help                  print this help
 
   rxi info "file.rex"       show all REX blocks
@@ -149,6 +154,8 @@ func main() {
 	switch action {
 	case "help":
 		help(0)
+	case "-v":
+		fmt.Printf("rxi v%s-%s\n", Version, Build)
 	case "info":
 		rexInfo(os.Args[2])
 	case "i":
