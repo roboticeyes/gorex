@@ -17,7 +17,6 @@ type controller struct {
 	config    *Configuration
 	rexClient *rexos.RexClient
 	rexUser   *rexos.User
-	project   *rexos.Project
 }
 
 // NewController creates a new controller
@@ -33,6 +32,16 @@ func (c *controller) Connect() (string, error) {
 
 func (c *controller) GetConfiguration() *Configuration {
 	return c.config
+}
+
+func (c *controller) GetAllProjects() ([]rexos.ProjectSimple, error) {
+	projectService := rexos.NewProjectService(c.rexClient)
+	projects, err := projectService.FindAllByOwner(c.rexUser.UserID)
+	if err != nil {
+		var empty []rexos.ProjectSimple
+		return empty, err
+	}
+	return projects.Embedded.Projects, nil
 }
 
 // login fetches a new token and stores it locally in the token file
