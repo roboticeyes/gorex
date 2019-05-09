@@ -6,6 +6,45 @@ import (
 	"fmt"
 )
 
+// ProjectComplexList can be used to get a detailed list of project owned by somebody
+type ProjectComplexList struct {
+	Embedded struct {
+		Projects []struct {
+			ID                         string `json:"-"` // auto-generated after getting the list of projects
+			Public                     bool   `json:"public"`
+			NumberOfProjectFiles       int    `json:"numberOfProjectFiles"`
+			TotalProjectFileSize       int    `json:"totalProjectFileSize"`
+			RootRexReferenceKey        string `json:"rootRexReferenceKey"`
+			NumberOfReadPermittedUsers int    `json:"numberOfReadPermittedUsers"`
+			LastUpdated                string `json:"lastUpdated"`
+			DateCreated                string `json:"dateCreated"`
+			Owner                      string `json:"owner"`
+			Name                       string `json:"name"`
+			Links                      struct {
+				Self struct {
+					Href string `json:"href"`
+				} `json:"self"`
+				Project struct {
+					Href      string `json:"href"`
+					Templated bool   `json:"templated"`
+				} `json:"project"`
+				RexReferences struct {
+					Href      string `json:"href"`
+					Templated bool   `json:"templated"`
+				} `json:"rexReferences"`
+				RootRexReference struct {
+					Href      string `json:"href"`
+					Templated bool   `json:"templated"`
+				} `json:"rootRexReference"`
+				ProjectFiles struct {
+					Href      string `json:"href"`
+					Templated bool   `json:"templated"`
+				} `json:"projectFiles"`
+			} `json:"_links"`
+		} `json:"projects"`
+	} `json:"_embedded"`
+}
+
 // ProjectSimple is the basic structure representing a simple RexProject
 type ProjectSimple struct {
 	ID    string // auto-generated after getting the list of projects

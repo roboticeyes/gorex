@@ -20,6 +20,7 @@ import (
 var (
 	apiProjectByNameAndOwner = "/projects/search/findByNameAndOwner?"
 	apiProjectByOwner        = "/projects/search/findAllByOwner?owner="
+	apiProjectAllByUser      = "/projects/search/findAllFiltered?isOwnedBy=true&isReadSharedTo=true&isWriteSharedTo=true&projection=detailedList&size=100&sort=lastUpdated,desc&user="
 	apiProjects              = "/projects"
 	apiRexReferences         = "/rexReferences"
 	apiProjectFiles          = "/projectFiles/"
@@ -27,6 +28,7 @@ var (
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
+	FindAllByUser(owner string) (*ProjectComplexList, error)
 	FindAllByOwner(owner string) (*ProjectSimpleList, error)
 	FindByNameAndOwner(name, owner string) (*Project, error)
 
@@ -55,6 +57,31 @@ func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error
 	var project Project
 	err = json.Unmarshal(body, &project)
 	return &project, err
+}
+
+func (s *projectService) FindAllByUser(user string) (*ProjectComplexList, error) {
+	query := s.client.GetAPIURL() + apiProjectAllByUser + user
+	req, _ := http.NewRequest("GET", query, nil)
+	body, err := s.client.Send(req)
+	if err != nil {
+		return &ProjectComplexList{}, err
+	}
+
+	var projects ProjectComplexList
+	err = json.Unmarshal(body, &projects)
+	if err != nil {
+		panic(err)
+	}
+
+	// set ID for convenience
+	for i, p := range projects.Embedded.Projects {
+		re, _ := regexp.Compile("/projects/(.*)")
+		values := re.FindStringSubmatch(p.Links.Self.Href)
+		if len(values) > 0 {
+			projects.Embedded.Projects[i].ID = values[1]
+		}
+	}
+	return &projects, err
 }
 
 // FindByNameAndOwner returns the unique identified project by userId and project name

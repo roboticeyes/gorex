@@ -1,9 +1,6 @@
 package main
 
 import (
-	// "fmt"
-	// "strings"
-
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
 	"github.com/roboticeyes/gorex/http/rexos"
@@ -30,7 +27,8 @@ type ViewModel struct {
 type Controller interface {
 	Connect() (string, error)
 	GetConfiguration() *Configuration
-	GetAllProjects() ([]rexos.ProjectSimple, error)
+	GetAllProjects() (rexos.ProjectComplexList, error)
+	GetUserID() string
 }
 
 // NewTui creates a new TUI
@@ -81,7 +79,7 @@ func NewTui(c Controller) UIRunner {
 			if err != nil {
 				view.status.SetConnected(false, err.Error())
 			}
-			view.projectsView.SetProjects(p)
+			view.projectsView.SetProjects(view.controller.GetUserID(), p)
 			main.SwitchToPage("projects")
 		} else if event.Key() == tcell.KeyF3 {
 			main.SwitchToPage("leanbim")

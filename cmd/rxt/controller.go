@@ -34,14 +34,17 @@ func (c *controller) GetConfiguration() *Configuration {
 	return c.config
 }
 
-func (c *controller) GetAllProjects() ([]rexos.ProjectSimple, error) {
+func (c *controller) GetUserID() string {
+	return c.rexUser.UserID
+}
+
+func (c *controller) GetAllProjects() (rexos.ProjectComplexList, error) {
 	projectService := rexos.NewProjectService(c.rexClient)
-	projects, err := projectService.FindAllByOwner(c.rexUser.UserID)
+	projects, err := projectService.FindAllByUser(c.rexUser.UserID)
 	if err != nil {
-		var empty []rexos.ProjectSimple
-		return empty, err
+		return rexos.ProjectComplexList{}, err
 	}
-	return projects.Embedded.Projects, nil
+	return *projects, nil
 }
 
 // login fetches a new token and stores it locally in the token file
