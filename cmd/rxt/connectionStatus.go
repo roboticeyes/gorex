@@ -16,20 +16,15 @@ func NewConnectionStatus() *ConnectionStatus {
 	}
 	c.SetTextAlign(tview.AlignRight).
 		SetDynamicColors(true)
-	c.SetConnected(false)
+	c.SetConnected(false, "not connected")
 	return c
 }
 
 // SetConnected can be called to change the state
-func (c *ConnectionStatus) SetConnected(status bool) {
+func (c *ConnectionStatus) SetConnected(status bool, msg string) {
 	if status == false {
-		c.SetText("[red]not connected")
+		c.SetText("[white:red]" + msg)
 	} else {
-		c.SetText("[green]connected")
+		c.SetText("[green]" + msg)
 	}
-}
-
-// SetError sets the error message
-func (c *ConnectionStatus) SetError(e error) {
-	c.SetText("[white:red]" + e.Error())
 }

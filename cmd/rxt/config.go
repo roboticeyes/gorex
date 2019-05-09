@@ -9,6 +9,8 @@ import (
 type Configuration struct {
 	Default      string        `json:"default"`
 	Environments []Environment `json:"environments"`
+	Active       Environment   `json:"-"`
+	APIUrl       string        `json:"-"`
 }
 
 // Environment describes a specific rexOS environment
@@ -29,5 +31,14 @@ func LoadConfiguration(fileName string) (*Configuration, error) {
 	}
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
+
+	// find and set active environment
+	for _, e := range config.Environments {
+		if e.Name == config.Default {
+			config.Active = e
+			config.APIUrl = "https://" + config.Active.Domain
+			break
+		}
+	}
 	return config, nil
 }

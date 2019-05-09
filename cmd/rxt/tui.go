@@ -26,7 +26,8 @@ type ViewModel struct {
 
 // Controller is an interface for providing business logic
 type Controller interface {
-	Connect() error
+	Connect() (string, error)
+	GetConfiguration() *Configuration
 }
 
 // NewTui creates a new TUI
@@ -42,6 +43,7 @@ func NewTui(c Controller) UIRunner {
 		SetRows(1).
 		SetColumns(0, -1, 0).
 		AddItem(tview.NewTextView().SetDynamicColors(true).SetText("[yellow]rexOS terminal"), 0, 0, 1, 1, 0, 0, false).
+		AddItem(tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter).SetText("[blue]"+c.GetConfiguration().Default), 0, 1, 1, 1, 0, 0, false).
 		AddItem(view.status, 0, 2, 1, 1, 0, 0, false)
 
 	// main area
@@ -62,10 +64,10 @@ func NewTui(c Controller) UIRunner {
 		if event.Key() == tcell.KeyEsc || event.Rune() == 'q' {
 			view.app.Stop()
 		} else if event.Key() == tcell.KeyF1 {
-			if err := view.controller.Connect(); err == nil {
-				view.status.SetConnected(true)
+			if username, err := view.controller.Connect(); err == nil {
+				view.status.SetConnected(true, username)
 			} else {
-				view.status.SetError(err)
+				view.status.SetConnected(false, err.Error())
 			}
 		}
 		return event
