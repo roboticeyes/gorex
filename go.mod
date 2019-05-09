@@ -2,6 +2,8 @@ module github.com/roboticeyes/gorex
 
 require (
 	github.com/breiting/socketcluster-client-go v1.0.1
+	github.com/breiting/tview v0.0.0-20190113120821-e5e361b9d790
+	github.com/gdamore/tcell v1.1.2
 	github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a
 	github.com/google/uuid v1.1.0
 	github.com/gorilla/websocket v1.4.0 // indirect
