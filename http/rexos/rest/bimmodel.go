@@ -1,4 +1,6 @@
-package rexos
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
+package rest
 
 // BimModel is the main BIM model structure
 type BimModel struct {

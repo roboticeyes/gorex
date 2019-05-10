@@ -1,6 +1,18 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
+
+// RexReference is a spatial anchor which can be attached to a project or a project file.
+type RexReference struct {
+	Key             string                 `json:"key"`
+	Project         string                 `json:"project"`
+	ParentReference string                 `json:"parentReference"`
+	RootReference   bool                   `json:"rootReference"`
+	Address         *ProjectAddress        `json:"address"`
+	AbsTransform    *ProjectTransformation `json:"absoluteTransformation"`
+	RelTransform    *ProjectTransformation `json:"relativeTransformation"`
+	FileTransform   *FileTransformation    `json:"fileTransformation"`
+}
 
 // ProjectTransformation is used for the absoluteTransformation as well as for the relativeTransformation of a RexReference
 type ProjectTransformation struct {

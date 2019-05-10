@@ -5,7 +5,7 @@ import (
 
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	"github.com/roboticeyes/gorex/http/rexos"
+	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 var (

@@ -1,4 +1,4 @@
-package rexos
+package rest
 
 import (
 	"testing"

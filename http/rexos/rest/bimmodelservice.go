@@ -1,4 +1,6 @@
-package rexos
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
+package rest
 
 import (
 	"encoding/json"

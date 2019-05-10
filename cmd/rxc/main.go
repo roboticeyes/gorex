@@ -15,7 +15,7 @@ import (
 	"text/scanner"
 
 	"github.com/breiting/socketcluster-client-go/scclient"
-	"github.com/roboticeyes/gorex/http/rexos"
+	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 // the help text that gets displayed when something goes wrong or when you run

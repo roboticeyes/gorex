@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	"github.com/roboticeyes/gorex/http/rexos"
+	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 // UIRunner wrapps the function to run the UI

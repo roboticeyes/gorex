@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
 
 import (
 	b64 "encoding/base64"
@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-var (
+const (
 	apiToken = "/oauth/token"
 	apiBase  = "/rex-gateway/api/v2"
 )

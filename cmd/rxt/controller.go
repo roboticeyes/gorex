@@ -6,7 +6,7 @@ import (
 	"golang.org/x/oauth2"
 	"io/ioutil"
 
-	"github.com/roboticeyes/gorex/http/rexos"
+	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 const (

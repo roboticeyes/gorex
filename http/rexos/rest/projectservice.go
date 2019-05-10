@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
 
 import (
 	"bytes"
@@ -121,7 +121,7 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 
 	// Create a RexReference as well
 	uuid := uuid.New().String()
-	rexReference := Reference{
+	rexReference := RexReference{
 		Project:         project.Links.Self.Href,
 		RootReference:   false,
 		ParentReference: parentReferenceURL,
@@ -190,7 +190,7 @@ func (s *projectService) uploadFileContent(uploadURL string, fileName string, r 
 	return err
 }
 
-func (s *projectService) createRexReference(r *Reference) (string, error) {
+func (s *projectService) createRexReference(r *RexReference) (string, error) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)

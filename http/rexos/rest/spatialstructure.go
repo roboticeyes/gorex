@@ -1,4 +1,6 @@
-package rexos
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
+package rest
 
 // SpatialStructure contains the hierarchy tree of a bim model
 type SpatialStructure struct {
