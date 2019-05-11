@@ -6,7 +6,8 @@ import (
 	"golang.org/x/oauth2"
 	"io/ioutil"
 
-	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
+	"github.com/roboticeyes/gorex/http/rexos/listing"
+	"github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 const (
@@ -14,9 +15,10 @@ const (
 )
 
 type controller struct {
-	config    *Configuration
-	rexClient *rexos.RexClient
-	rexUser   *rexos.User
+	config         *Configuration
+	rexClient      *rest.RexClient
+	rexUser        *rest.User
+	listingService listing.Service
 }
 
 // NewController creates a new controller
@@ -38,18 +40,13 @@ func (c *controller) GetUserID() string {
 	return c.rexUser.UserID
 }
 
-func (c *controller) GetAllProjects() (rexos.ProjectComplexList, error) {
-	projectService := rexos.NewProjectService(c.rexClient)
-	projects, err := projectService.FindAllByUser(c.rexUser.UserID)
-	if err != nil {
-		return rexos.ProjectComplexList{}, err
-	}
-	return *projects, nil
+func (c *controller) GetProjects() ([]listing.Project, error) {
+	return c.listingService.GetProjects()
 }
 
 // login fetches a new token and stores it locally in the token file
 func (c *controller) login() error {
-	cli := rexos.NewRexClient(c.config.APIUrl)
+	cli := rest.NewRexClient(c.config.APIUrl)
 
 	token, err := cli.ConnectWithClientCredentials(c.config.Active.ClientID, c.config.Active.ClientSecret)
 	if err != nil {
@@ -86,11 +83,10 @@ func (c *controller) authenticate() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	c.rexClient = rexos.NewRexClientWithToken(c.config.APIUrl, token)
+	c.rexClient = rest.NewRexClientWithToken(c.config.APIUrl, token)
 
 	// get user information
-	userService := rexos.NewUserService(c.rexClient)
-
+	userService := rest.NewUserService(c.rexClient)
 	c.rexUser, err = userService.GetCurrentUser()
 	if err != nil {
 		return "", err
@@ -98,5 +94,8 @@ func (c *controller) authenticate() (string, error) {
 	if c.rexUser == nil || c.rexUser.UserID == "" {
 		return "", fmt.Errorf("User information cannot be retrieved (token expired?), please login again")
 	}
+
+	c.listingService = listing.NewService(rest.NewDataProvider(c.rexClient))
+
 	return c.rexUser.Username, nil
 }

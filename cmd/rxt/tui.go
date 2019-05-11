@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
+	"github.com/roboticeyes/gorex/http/rexos/listing"
 )
 
 // UIRunner wrapps the function to run the UI
@@ -27,7 +27,7 @@ type ViewModel struct {
 type Controller interface {
 	Connect() (string, error)
 	GetConfiguration() *Configuration
-	GetAllProjects() (rexos.ProjectComplexList, error)
+	GetProjects() ([]listing.Project, error)
 	GetUserID() string
 }
 
@@ -75,7 +75,7 @@ func NewTui(c Controller) UIRunner {
 				view.status.SetConnected(false, err.Error())
 			}
 		} else if event.Key() == tcell.KeyF2 {
-			p, err := view.controller.GetAllProjects()
+			p, err := view.controller.GetProjects()
 			if err != nil {
 				view.status.SetConnected(false, err.Error())
 			}

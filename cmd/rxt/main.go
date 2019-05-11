@@ -38,6 +38,10 @@ func main() {
 	if err != nil {
 		exit(err.Error(), 1)
 	}
-	c := NewController(config)
-	NewTui(c).Run()
+
+	tui := true
+	if tui {
+		c := NewController(config)
+		NewTui(c).Run()
+	}
 }

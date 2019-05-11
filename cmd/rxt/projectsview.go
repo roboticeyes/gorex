@@ -5,7 +5,7 @@ import (
 
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
+	"github.com/roboticeyes/gorex/http/rexos/listing"
 )
 
 var (
@@ -44,13 +44,12 @@ func NewProjectView() *ProjectsView {
 	p.SetTitle("Projects")
 	p.SetBorder(true)
 
-	var tp rexos.ProjectComplexList
-	p.SetProjects("", tp)
+	p.SetProjects("", []listing.Project{})
 	return p
 }
 
 // SetProjects sets the projects for this view
-func (v *ProjectsView) SetProjects(owner string, projectList rexos.ProjectComplexList) {
+func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
 
 	for i, h := range tableHeader {
 
@@ -63,7 +62,7 @@ func (v *ProjectsView) SetProjects(owner string, projectList rexos.ProjectComple
 		})
 	}
 
-	for row, p := range projectList.Embedded.Projects {
+	for row, p := range projects {
 
 		var color tcell.Color = tcell.ColorYellow
 		if p.Owner != owner {
