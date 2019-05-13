@@ -85,7 +85,7 @@ func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) 
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		msg := fmt.Sprintf("Did receive HTTP code %d", resp.StatusCode)
+		msg := fmt.Sprintf("Status code %d", resp.StatusCode)
 		return nil, errors.New(msg)
 	}
 
