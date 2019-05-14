@@ -69,7 +69,7 @@ func NewTui(c *ViewController) UIRunner {
 	})
 
 	// Auto-connect
-	view.status.SetConnected(true, "connecting")
+	view.status.SetStatus(Info, "connecting")
 	go view.connect()
 	return &view
 }
@@ -82,12 +82,12 @@ func (v *ViewModel) Run() error {
 func (v *ViewModel) connect() {
 	if username, err := v.controller.Connect(); err == nil {
 		v.app.QueueUpdateDraw(func() {
-			v.status.SetConnected(true, username)
+			v.status.SetStatus(Success, username)
 			v.projects()
 		})
 	} else {
 		v.app.QueueUpdateDraw(func() {
-			v.status.SetConnected(false, err.Error())
+			v.status.SetStatus(Error, err.Error())
 		})
 	}
 }
@@ -95,7 +95,7 @@ func (v *ViewModel) connect() {
 func (v *ViewModel) projects() {
 	p, err := v.controller.GetProjects()
 	if err != nil {
-		v.status.SetConnected(false, err.Error())
+		v.status.SetStatus(Error, err.Error())
 	}
 	v.projectsView.SetProjects(v.controller.GetUserID(), p)
 	v.main.SwitchToPage("projects")

@@ -2,7 +2,7 @@ package listing
 
 // Project is the top level entity of a rexOS
 type Project struct {
-	ID                   string
+	Urn                  string
 	Name                 string
 	Owner                string
 	NumberOfProjectFiles int

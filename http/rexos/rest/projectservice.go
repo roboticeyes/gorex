@@ -28,8 +28,7 @@ var (
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
-	FindAllByUser(owner string) (*ProjectComplexList, error)
-	FindAllByOwner(owner string) (*ProjectSimpleList, error)
+	FindAllByUser(owner string) (*ProjectDetailedList, error)
 	FindByNameAndOwner(name, owner string) (*Project, error)
 
 	UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) error
@@ -59,50 +58,26 @@ func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error
 	return &project, err
 }
 
-func (s *projectService) FindAllByUser(user string) (*ProjectComplexList, error) {
+func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, error) {
 	query := s.client.GetAPIURL() + apiProjectAllByUser + user
 	req, _ := http.NewRequest("GET", query, nil)
 	body, err := s.client.Send(req)
 	if err != nil {
-		return &ProjectComplexList{}, err
+		return &ProjectDetailedList{}, err
 	}
 
-	var projects ProjectComplexList
+	var projects ProjectDetailedList
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
 		panic(err)
 	}
 
-	// set ID for convenience
+	// set Urn with legacy ID if not retrieved from backend
 	for i, p := range projects.Embedded.Projects {
 		re, _ := regexp.Compile("/projects/(.*)")
 		values := re.FindStringSubmatch(p.Links.Self.Href)
-		if len(values) > 0 {
-			projects.Embedded.Projects[i].ID = values[1]
-		}
-	}
-	return &projects, err
-}
-
-// FindByNameAndOwner returns the unique identified project by userId and project name
-func (s *projectService) FindAllByOwner(owner string) (*ProjectSimpleList, error) {
-
-	query := s.client.GetAPIURL() + apiProjectByOwner + owner
-	req, _ := http.NewRequest("GET", query, nil)
-	body, err := s.client.Send(req)
-	if err != nil {
-		return &ProjectSimpleList{}, err
-	}
-
-	var projects ProjectSimpleList
-	err = json.Unmarshal(body, &projects)
-
-	// set ID for convenience
-	for i, p := range projects.Embedded.Projects {
-		re, _ := regexp.Compile("/projects/(.*)")
-		values := re.FindStringSubmatch(p.Links.Self.Href)
-		if len(values) > 0 {
-			projects.Embedded.Projects[i].ID = values[1]
+		if len(values) > 0 && p.Urn == "" {
+			projects.Embedded.Projects[i].Urn = values[1]
 		}
 	}
 	return &projects, err

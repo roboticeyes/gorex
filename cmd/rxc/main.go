@@ -160,7 +160,7 @@ func authenticate() {
 
 func listProjects() {
 	projectService := rexos.NewProjectService(rexClient)
-	projects, err := projectService.FindAllByOwner(rexUser.UserID)
+	projects, err := projectService.FindAllByUser(rexUser.UserID)
 
 	if err != nil {
 		fmt.Println("Cannot get project", err)

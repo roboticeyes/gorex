@@ -40,7 +40,7 @@ func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 	var result []listing.Project
 	for _, p := range projects.Embedded.Projects {
 		result = append(result, listing.Project{
-			ID:                   p.ID,
+			Urn:                  p.Urn,
 			Name:                 p.Name,
 			Owner:                p.Owner,
 			NumberOfProjectFiles: p.NumberOfProjectFiles,

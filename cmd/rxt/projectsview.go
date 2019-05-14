@@ -16,7 +16,7 @@ var (
 func init() {
 
 	tableHeader = []string{
-		"ID",
+		"Urn",
 		"Name",
 		"#Files",
 		"Size (kb)",
@@ -70,7 +70,7 @@ func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
 		}
 
 		v.SetCell(row+1, 0, &tview.TableCell{
-			Text:          p.ID,
+			Text:          p.Urn,
 			Color:         color,
 			Align:         alignment[0],
 			NotSelectable: false,

@@ -4,6 +4,20 @@ import (
 	"github.com/breiting/tview"
 )
 
+// StatusCode should be used to set the status
+type StatusCode int
+
+const (
+	// Success everything good
+	Success StatusCode = iota
+	// Error everything bad
+	Error StatusCode = iota
+	// Info just for info
+	Info StatusCode = iota
+	// Warning raises a warning
+	Warning StatusCode = iota
+)
+
 // ConnectionStatus is a UI component for handling rexOS connection
 type ConnectionStatus struct {
 	*tview.TextView
@@ -16,15 +30,22 @@ func NewConnectionStatus() *ConnectionStatus {
 	}
 	c.SetTextAlign(tview.AlignRight).
 		SetDynamicColors(true)
-	c.SetConnected(false, "not connected")
+	c.SetStatus(Info, "not connected")
 	return c
 }
 
-// SetConnected can be called to change the state
-func (c *ConnectionStatus) SetConnected(status bool, msg string) {
-	if status == false {
-		c.SetText("[white:red]" + msg)
-	} else {
-		c.SetText("[green]" + msg)
+// SetStatus can be called to change the state
+func (c *ConnectionStatus) SetStatus(code StatusCode, msg string) {
+	c.SetText(getColor(code) + msg)
+}
+
+func getColor(s StatusCode) string {
+
+	colorCodes := []string{
+		"[green]",
+		"[white:red]",
+		"[yellow]",
+		"[white:orange]",
 	}
+	return colorCodes[s]
 }
