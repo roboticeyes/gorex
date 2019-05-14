@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	"github.com/roboticeyes/gorex/http/rexos/listing"
 )
 
 // UIRunner wrapps the function to run the UI
@@ -20,19 +19,11 @@ type ViewModel struct {
 	statusBar    *tview.TextView
 	root         *tview.Flex
 
-	controller Controller
-}
-
-// Controller is an interface for providing business logic
-type Controller interface {
-	Connect() (string, error)
-	GetConfiguration() *Configuration
-	GetProjects() ([]listing.Project, error)
-	GetUserID() string
+	controller *ViewController
 }
 
 // NewTui creates a new TUI
-func NewTui(c Controller) UIRunner {
+func NewTui(c *ViewController) UIRunner {
 
 	view := ViewModel{
 		controller: c,
@@ -79,7 +70,7 @@ func NewTui(c Controller) UIRunner {
 			if err != nil {
 				view.status.SetConnected(false, err.Error())
 			}
-			view.projectsView.SetProjects(view.controller.GetUserID(), p)
+			view.projectsView.SetProjects(view.controller.GetUserName(), p)
 			main.SwitchToPage("projects")
 		} else if event.Key() == tcell.KeyF3 {
 			main.SwitchToPage("leanbim")

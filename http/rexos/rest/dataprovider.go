@@ -50,3 +50,20 @@ func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 	}
 	return result, nil
 }
+
+// GetUserInformation delivers information about the authenticated user
+func (d *DataProviderRest) GetUserInformation() (listing.User, error) {
+
+	user, err := d.userService.GetCurrentUser()
+	if err != nil {
+		return listing.User{}, err
+	}
+
+	return listing.User{
+		UserID:    user.UserID,
+		Username:  user.Username,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}, nil
+}

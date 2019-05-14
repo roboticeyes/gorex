@@ -39,9 +39,5 @@ func main() {
 		exit(err.Error(), 1)
 	}
 
-	tui := true
-	if tui {
-		c := NewController(config)
-		NewTui(c).Run()
-	}
+	NewTui(NewViewController(config)).Run()
 }
