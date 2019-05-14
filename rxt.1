@@ -1,0 +1,37 @@
+.TH rxt 1 rxt\-VERSION
+.SH NAME
+rxt \- rexOS terminal console
+.RB command
+.SH SYNOPSIS
+.B rxt
+.SH DESCRIPTION
+rxt is a TUI-based terminal client for accessing the rexOS cloud services.
+.P
+In order to use rxt properly you need to have a config file either in your home directory ~/.config/rxt/config.json or
+you can also provide the config file as command line argument. The file needs to have the following format:
+.P
+{
+.br
+    "default": "rex",
+.br
+    "environments": [
+.br
+        {
+.br
+            "name": "rex",
+.br
+            "domain": "rex.robotic-eyes.com",
+.br
+            "clientId": "<your client ID>",
+.br
+            "clientSecret": "<your client secret>"
+.br
+        }
+.br
+    ]
+.br
+}
+.P
+You can also add multiple environments in parallel. The default entry will be loaded automatically.
+.SH SEE ALSO
+.BR rxi (1)

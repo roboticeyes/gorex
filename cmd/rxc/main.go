@@ -10,11 +10,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"text/scanner"
 
 	"github.com/breiting/socketcluster-client-go/scclient"
-	"github.com/roboticeyes/gorex/http/rexos"
+	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
 )
 
 // the help text that gets displayed when something goes wrong or when you run
@@ -32,6 +33,7 @@ actions:
   rxc ls                    list all projects
   rxc ls "project name"     show details for a given project
   rxc listen "project name" listens to project change notifications
+  rxc bim 1000              retrieve the bim model with ID 1000
 `
 
 const (
@@ -158,7 +160,7 @@ func authenticate() {
 
 func listProjects() {
 	projectService := rexos.NewProjectService(rexClient)
-	projects, err := projectService.FindAllByOwner(rexUser.UserID)
+	projects, err := projectService.FindAllByUser(rexUser.UserID)
 
 	if err != nil {
 		fmt.Println("Cannot get project", err)
@@ -180,6 +182,37 @@ func listProject(projectName string) {
 	}
 
 	fmt.Println(project)
+}
+
+// WIP currently not exposed, just for testing
+func bimModel(modelID string) {
+	bimModelService := rexos.NewBimModelService(rexClient)
+	id, err := strconv.ParseUint(modelID, 10, 64)
+	if err != nil {
+		id = 1000
+	}
+	bimModel, spatial, err := bimModelService.GetBimModelByID(id)
+
+	if err != nil {
+		fmt.Println("Cannot get project", err)
+	}
+
+	fmt.Println("BimModel:   ", bimModel.Name)
+	fmt.Println("  GlobalID: ", bimModel.GlobalID)
+	fmt.Println("  Owner:    ", bimModel.Owner)
+	fmt.Println("  URN:      ", bimModel.Urn)
+	fmt.Println()
+
+	if spatial != nil {
+		fmt.Println("Spatial:    ", spatial.Name)
+		fmt.Println("  GlobalID: ", spatial.GlobalID)
+		fmt.Println("  BIM site: ", spatial.Children[0].Name)
+
+		for _, b := range spatial.Children[0].Children {
+			fmt.Println("  Building: ", b.Name)
+		}
+	}
+
 }
 
 func onConnect(client scclient.Client) {
@@ -260,6 +293,9 @@ func main() {
 		os.Exit(0)
 	case "login":
 		login()
+	case "bim":
+		authenticate()
+		bimModel(os.Args[2])
 	case "ls":
 		switch commandArgs {
 		case 0:

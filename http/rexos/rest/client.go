@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
 
 import (
 	b64 "encoding/base64"
@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-var (
+const (
 	apiToken = "/oauth/token"
 	apiBase  = "/rex-gateway/api/v2"
 )
@@ -85,7 +85,7 @@ func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) 
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		msg := fmt.Sprintf("Did receive HTTP code %d", resp.StatusCode)
+		msg := fmt.Sprintf("Status code %d", resp.StatusCode)
 		return nil, errors.New(msg)
 	}
 

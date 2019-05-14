@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
 
 import (
 	"bytes"
@@ -20,6 +20,7 @@ import (
 var (
 	apiProjectByNameAndOwner = "/projects/search/findByNameAndOwner?"
 	apiProjectByOwner        = "/projects/search/findAllByOwner?owner="
+	apiProjectAllByUser      = "/projects/search/findAllFiltered?isOwnedBy=true&isReadSharedTo=true&isWriteSharedTo=true&projection=detailedList&size=100&sort=lastUpdated,desc&user="
 	apiProjects              = "/projects"
 	apiRexReferences         = "/rexReferences"
 	apiProjectFiles          = "/projectFiles/"
@@ -27,7 +28,7 @@ var (
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
-	FindAllByOwner(owner string) (*ProjectSimpleList, error)
+	FindAllByUser(owner string) (*ProjectDetailedList, error)
 	FindByNameAndOwner(name, owner string) (*Project, error)
 
 	UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) error
@@ -57,25 +58,26 @@ func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error
 	return &project, err
 }
 
-// FindByNameAndOwner returns the unique identified project by userId and project name
-func (s *projectService) FindAllByOwner(owner string) (*ProjectSimpleList, error) {
-
-	query := s.client.GetAPIURL() + apiProjectByOwner + owner
+func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, error) {
+	query := s.client.GetAPIURL() + apiProjectAllByUser + user
 	req, _ := http.NewRequest("GET", query, nil)
 	body, err := s.client.Send(req)
 	if err != nil {
-		return &ProjectSimpleList{}, err
+		return &ProjectDetailedList{}, err
 	}
 
-	var projects ProjectSimpleList
+	var projects ProjectDetailedList
 	err = json.Unmarshal(body, &projects)
+	if err != nil {
+		panic(err)
+	}
 
-	// set ID for convenience
+	// set Urn with legacy ID if not retrieved from backend
 	for i, p := range projects.Embedded.Projects {
 		re, _ := regexp.Compile("/projects/(.*)")
 		values := re.FindStringSubmatch(p.Links.Self.Href)
-		if len(values) > 0 {
-			projects.Embedded.Projects[i].ID = values[1]
+		if len(values) > 0 && p.Urn == "" {
+			projects.Embedded.Projects[i].Urn = values[1]
 		}
 	}
 	return &projects, err
@@ -94,7 +96,7 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 
 	// Create a RexReference as well
 	uuid := uuid.New().String()
-	rexReference := Reference{
+	rexReference := RexReference{
 		Project:         project.Links.Self.Href,
 		RootReference:   false,
 		ParentReference: parentReferenceURL,
@@ -163,7 +165,7 @@ func (s *projectService) uploadFileContent(uploadURL string, fileName string, r 
 	return err
 }
 
-func (s *projectService) createRexReference(r *Reference) (string, error) {
+func (s *projectService) createRexReference(r *RexReference) (string, error) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)

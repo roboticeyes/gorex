@@ -25,16 +25,20 @@ LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)"
 
 RXC_SRC = cmd/rxc/*.go
 RXI_SRC = cmd/rxi/*.go
+RXT_SRC = cmd/rxt/*.go
 
-TARGETS = rxc rxi
+TARGETS = rxc rxi rxt
 
-all: rxc rxi
+all: rxc rxi rxt
 
 rxc: $(RXC_SRC)
 	$(GOBUILD) -o $@ $(LDFLAGS) $(RXC_SRC)
 
 rxi: $(RXI_SRC)
 	$(GOBUILD) -o $@ $(LDFLAGS) $(RXI_SRC)
+
+rxt: $(RXT_SRC)
+	$(GOBUILD) -o $@ $(LDFLAGS) $(RXT_SRC)
 
 clean:
 	@rm -f $(TARGETS)
@@ -50,11 +54,15 @@ install: all
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/rxc.1
 	sed "s/VERSION/${VERSION}/g" < rxi.1 > ${DESTDIR}${MANPREFIX}/man1/rxi.1
 	chmod 644 ${DESTDIR}${MANPREFIX}/man1/rxi.1
+	sed "s/VERSION/${VERSION}/g" < rxt.1 > ${DESTDIR}${MANPREFIX}/man1/rxt.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/rxt.1
 
 uninstall:
 	rm -f ${DESTDIR}${PREFIX}/bin/rxc\
 		${DESTDIR}${MANPREFIX}/man1/rxc.1
 	rm -f ${DESTDIR}${PREFIX}/bin/rxi\
 		${DESTDIR}${MANPREFIX}/man1/rxi.1
+	rm -f ${DESTDIR}${PREFIX}/bin/rxt\
+		${DESTDIR}${MANPREFIX}/man1/rxt.1
 
 .PHONY: all test install uninstall

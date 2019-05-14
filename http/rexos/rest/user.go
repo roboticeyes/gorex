@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rexos
+package rest
 
 import (
 	"fmt"
