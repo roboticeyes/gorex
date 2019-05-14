@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/roboticeyes/gorex.svg)](https://travis-ci.org/roboticeyes/gorex) [![Go Report Card](https://goreportcard.com/badge/github.com/roboticeyes/gorex)](https://goreportcard.com/report/github.com/roboticeyes/gorex)
+[![Godoc Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/roboticeyes/gorex)
+[![Build Status](https://travis-ci.org/roboticeyes/gorex.svg)](https://travis-ci.org/roboticeyes/gorex)
+[![Go Report Card](https://goreportcard.com/badge/github.com/roboticeyes/gorex)](https://goreportcard.com/report/github.com/roboticeyes/gorex)
 
 <p align="center">
   <img style="float: right;" src="assets/rex-go.png" alt="goREX logo"/>
@@ -15,7 +17,7 @@ two different main features:
 
 ## Installation
 
-> You can install Go by following [these instructions](https://golang.org/doc/install). Please note that Go >= 1.11. is required!
+> You can install Go by following [these instructions](https://golang.org/doc/install). Please note that Go >= 1.12. is required!
 
 First, clone the repository to your local development path, and let go download all dependencies:
 
@@ -23,10 +25,10 @@ First, clone the repository to your local development path, and let go download 
 go mod tidy
 ```
 
-This should download all required packages. Then you can build the library by
+This should download all required packages. To build all tools, you simple use the attached `Makefile` and call
 
 ```
-go build
+make
 ```
 
 ## Usage
@@ -41,28 +43,38 @@ import (
 )
 ```
 
+Please see the `examples` folder for further demos.
+
 ## Tools
-
-You can easily build all tools by using the provided `Makefile`.
-
-```
-make
-sudo make install
-```
 
 ### rxi
 
 `rxi` is a simple command line tool which simply dumps REX file informations to the command line. It also allows to
 extract images from the file directly. For more information, please call `rxi` directly.
 
-### rxc
+### rxt
 
-`rxc` is a command line tool to work with rexOS on your command line. You can build the  `rxc` command line toole by
+`rxt` is terminal-based user interface for accessing the rexOS information. In order to work with `rxt`, you need to
+have a configuration file in place. Either put the file into `$HOME/.config/rxt/config.json` or attach the config file
+as command line parameter. The minimal information for a config file should contain the following information:
 
-```go
-cd cmd/rxc
-go build
+```json
+{
+    "default": "rex",
+    "environments": [
+        {
+            "name": "rex",
+            "domain": "rex.robotic-eyes.com",
+            "clientId": "<your clientid>",
+            "clientSecret": "<your clientsecret"
+        }
+    ]
+}
 ```
+
+### rxc (deprecated)
+
+`rxc` is a command line tool to work with rexOS on your command line.
 
 `rxc` uses environment variables to define the REX domain and user credentials, you need to set the following
 environment variables:
@@ -73,8 +85,7 @@ REX_CLIENT_ID=<your client id>
 REX_CLIENT_SECRET=<your client secret>
 ```
 
-Please check our [documentation](https://support.robotic-eyes.com/rest/index.html#overview-authentication) to generate
-valid user credentials.
+Please check our [documentation](https://rexos.org) to generate valid user credentials.
 
 ## Register an account
 
@@ -82,40 +93,6 @@ In order to work with the rexOS you need a REX account.
 Visit [the REX registration](https://rex.robotic-eyes.com/registration/register) page and create a new account. Under
 *Settings* you need to generate a new API token. This delivers a valid `clientId` and `clientSecret` for your
 application.
-
-### First sample
-
-For any call into rexOS you need to authenticate. Make sure that you have your `clientId` and `clientSecret` available.
-You also often need your `userId` which can be found [here](https://rex.robotic-eyes.com/rex-gateway/api/v2/users/current) after
-you logged into REX.
-
-```go
-baseURL := "https://rex.robotic-eyes.com"
-clientID := "your client id"
-clientSecret := "your client secret"
-
-// Create a new client instance
-cli := gorex.NewRexClient(baseURL)
-
-token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
-if err != nil {
-	fmt.Println("Error during connection", err)
-}
-
-// Create a new project service
-projectService := gorex.NewProjectService(cli)
-
-name := "your project name to look for"
-owner := "your user id"
-project, err := projectService.FindByNameAndOwner(name, owner)
-
-if err != nil {
-	fmt.Println("Cannot get project", err)
-}
-
-fmt.Println(project)
-
-```
 
 # Todos
 
