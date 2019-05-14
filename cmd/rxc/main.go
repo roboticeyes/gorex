@@ -184,6 +184,7 @@ func listProject(projectName string) {
 	fmt.Println(project)
 }
 
+// WIP currently not exposed, just for testing
 func bimModel(modelID string) {
 	bimModelService := rexos.NewBimModelService(rexClient)
 	id, err := strconv.ParseUint(modelID, 10, 64)

@@ -19,8 +19,7 @@ type ViewModel struct {
 	statusBar    *tview.TextView
 	root         *tview.Flex
 	main         *tview.Pages
-
-	controller *ViewController
+	controller   *ViewController
 }
 
 // NewTui creates a new TUI

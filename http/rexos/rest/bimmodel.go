@@ -3,6 +3,7 @@
 package rest
 
 // BimModel is the main BIM model structure
+// Currently work in progress, and may change in future!
 type BimModel struct {
 	DateCreated     interface{} `json:"dateCreated"`
 	CreatedBy       interface{} `json:"createdBy"`
