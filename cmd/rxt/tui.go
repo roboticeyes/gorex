@@ -18,6 +18,7 @@ type ViewModel struct {
 	projectsView *ProjectsView
 	statusBar    *tview.TextView
 	root         *tview.Flex
+	main         *tview.Pages
 
 	controller *ViewController
 }
@@ -41,16 +42,16 @@ func NewTui(c *ViewController) UIRunner {
 
 	// status bar
 	status := tview.NewTextView()
-	status.SetText("F1 Connect")
+	status.SetText("F1 Projects")
 
 	// main area use pages
-	main := tview.NewPages()
-	main.AddPage("projects", view.projectsView, true, true)
-	main.AddPage("leanbim", tview.NewBox().SetBorder(true).SetTitle("LeanBIM"), true, false)
+	view.main = tview.NewPages()
+	view.main.AddPage("projects", view.projectsView, true, true)
+	view.main.AddPage("leanbim", tview.NewBox().SetBorder(true).SetTitle("LeanBIM"), true, false)
 
 	view.root = tview.NewFlex().SetDirection(tview.FlexRow)
 	view.root.AddItem(titleBar, 1, 0, false)
-	view.root.AddItem(main, 0, 1, true)
+	view.root.AddItem(view.main, 0, 1, true)
 
 	view.root.AddItem(status, 1, 0, false)
 
@@ -60,28 +61,42 @@ func NewTui(c *ViewController) UIRunner {
 		if event.Key() == tcell.KeyEsc || event.Rune() == 'q' {
 			view.app.Stop()
 		} else if event.Key() == tcell.KeyF1 {
-			if username, err := view.controller.Connect(); err == nil {
-				view.status.SetConnected(true, username)
-			} else {
-				view.status.SetConnected(false, err.Error())
-			}
+			view.projects()
 		} else if event.Key() == tcell.KeyF2 {
-			p, err := view.controller.GetProjects()
-			if err != nil {
-				view.status.SetConnected(false, err.Error())
-			}
-			view.projectsView.SetProjects(view.controller.GetUserID(), p)
-			main.SwitchToPage("projects")
-		} else if event.Key() == tcell.KeyF3 {
-			main.SwitchToPage("leanbim")
+			view.main.SwitchToPage("leanbim")
 		}
 		return event
 	})
 
+	// Auto-connect
+	view.status.SetConnected(true, "connecting")
+	go view.connect()
 	return &view
 }
 
 // Run starts the user interface
 func (v *ViewModel) Run() error {
 	return v.app.Run()
+}
+
+func (v *ViewModel) connect() {
+	if username, err := v.controller.Connect(); err == nil {
+		v.app.QueueUpdateDraw(func() {
+			v.status.SetConnected(true, username)
+			v.projects()
+		})
+	} else {
+		v.app.QueueUpdateDraw(func() {
+			v.status.SetConnected(false, err.Error())
+		})
+	}
+}
+
+func (v *ViewModel) projects() {
+	p, err := v.controller.GetProjects()
+	if err != nil {
+		v.status.SetConnected(false, err.Error())
+	}
+	v.projectsView.SetProjects(v.controller.GetUserID(), p)
+	v.main.SwitchToPage("projects")
 }
