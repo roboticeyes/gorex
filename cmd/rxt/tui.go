@@ -70,7 +70,7 @@ func NewTui(c *ViewController) UIRunner {
 			if err != nil {
 				view.status.SetConnected(false, err.Error())
 			}
-			view.projectsView.SetProjects(view.controller.GetUserName(), p)
+			view.projectsView.SetProjects(view.controller.GetUserID(), p)
 			main.SwitchToPage("projects")
 		} else if event.Key() == tcell.KeyF3 {
 			main.SwitchToPage("leanbim")

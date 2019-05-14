@@ -15,7 +15,7 @@ type ViewController struct {
 func NewViewController(config *Configuration) *ViewController {
 	return &ViewController{
 		config:        config,
-		rexController: rexos.NewController(config.Active.Domain),
+		rexController: rexos.NewController(config.APIUrl),
 	}
 }
 
@@ -25,7 +25,7 @@ func (c *ViewController) Connect() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return c.rexController.GetUserName(), nil
+	return c.rexController.GetUserInformation().Username, nil
 }
 
 // GetConfiguration gets the configuration
@@ -35,7 +35,12 @@ func (c *ViewController) GetConfiguration() *Configuration {
 
 // GetUserName returns the user name of the authenticated user
 func (c *ViewController) GetUserName() string {
-	return c.rexController.GetUserName()
+	return c.rexController.GetUserInformation().Username
+}
+
+// GetUserID returns the user ID of the authenticated user
+func (c *ViewController) GetUserID() string {
+	return c.rexController.GetUserInformation().UserID
 }
 
 // GetProjects delivers a list of all projects related to the user

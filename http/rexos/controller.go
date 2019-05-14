@@ -17,7 +17,7 @@ import (
 type Controller interface {
 	Authenticate(clientID, clientSecret string) error
 	GetProjects() ([]listing.Project, error)
-	GetUserName() string
+	GetUserInformation() listing.User
 }
 
 type controller struct {
@@ -58,6 +58,6 @@ func (c *controller) GetProjects() ([]listing.Project, error) {
 	return c.listing.GetProjects()
 }
 
-func (c *controller) GetUserName() string {
-	return c.userInformation.Username
+func (c *controller) GetUserInformation() listing.User {
+	return c.userInformation
 }

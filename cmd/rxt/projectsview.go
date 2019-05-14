@@ -48,7 +48,7 @@ func NewProjectView() *ProjectsView {
 	return p
 }
 
-// SetProjects sets the projects for this view
+// SetProjects sets the projects for this view. The owner is used to color shared project differently
 func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
 
 	for i, h := range tableHeader {
