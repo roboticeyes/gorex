@@ -9,3 +9,10 @@ type Project struct {
 	TotalProjectFileSize int
 	Public               bool
 }
+
+// ProjectFile respresents a file which can be stored to a project
+type ProjectFile struct {
+	Name     string
+	Type     string
+	FileSize int
+}

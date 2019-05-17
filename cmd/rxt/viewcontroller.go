@@ -47,3 +47,12 @@ func (c *ViewController) GetUserID() string {
 func (c *ViewController) GetProjects() ([]listing.Project, error) {
 	return c.rexController.GetProjects()
 }
+
+// GetProjectFiles delivers the list of project files for a given project
+func (c *ViewController) GetProjectFiles() ([]listing.ProjectFile, error) {
+	var dummy []listing.ProjectFile
+
+	dummy = append(dummy, listing.ProjectFile{Name: "File 1", Type: "", FileSize: 1234422})
+	dummy = append(dummy, listing.ProjectFile{Name: "File 2", Type: "rex", FileSize: 34422})
+	return dummy, nil
+}

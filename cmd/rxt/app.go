@@ -92,8 +92,9 @@ func (a *App) createPanels() *tview.TextView {
 	a.main = tview.NewPages()
 
 	a.panels = append(a.panels, NewHelpPanel())
-	a.panels = append(a.panels, NewProjectPanel(a.controller))
+	a.panels = append(a.panels, NewProjectsPanel(a.controller))
 	a.panels = append(a.panels, NewAdminPanel())
+	a.panels = append(a.panels, NewProjectPanel(a.controller))
 
 	// toolbar
 	toolbar := tview.NewTextView().SetDynamicColors(true).SetRegions(false).SetWrap(false)
@@ -104,7 +105,9 @@ func (a *App) createPanels() *tview.TextView {
 			visible = true
 		}
 		a.main.AddPage(p.name(), p.content(), true, visible)
-		fmt.Fprintf(toolbar, `%s [darkcyan]%s[white]  `, keyString[p.key()], p.name())
+		if p.key() > 0 {
+			fmt.Fprintf(toolbar, `%s [darkcyan]%s[white]  `, keyString[p.key()], p.name())
+		}
 	}
 	return toolbar
 }
