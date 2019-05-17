@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/breiting/tview"
@@ -44,8 +45,36 @@ func NewProjectView() *ProjectsView {
 	p.SetTitle("Projects")
 	p.SetBorder(true)
 
+	p.Table.SetSelectedFunc(func(row, column int) {
+
+		fmt.Println("selected", row, column)
+	})
+
+	p.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Rune() == 'n' {
+			// modal := tview.NewModal().
+			// 	SetText("Do you want to quit the application?").
+			// 	AddButtons([]string{"Quit", "Cancel"}).
+			// 	SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			// 		if buttonLabel == "Quit" {
+			// 		}
+			// 	})
+		}
+		return event
+	})
+
 	p.SetProjects("", []listing.Project{})
 	return p
+}
+
+// InputHandler returns the handler of the primitive
+func (v *ProjectsView) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
+	return v.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
+		fmt.Println(event)
+
+	})
+
+	// return v.Table.InputHandler()
 }
 
 // SetProjects sets the projects for this view. The owner is used to color shared project differently
