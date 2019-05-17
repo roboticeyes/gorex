@@ -9,6 +9,9 @@
 package rexos
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/roboticeyes/gorex/http/rexos/listing"
 	"github.com/roboticeyes/gorex/http/rexos/rest"
 )
@@ -21,6 +24,7 @@ type Controller interface {
 }
 
 type controller struct {
+	wg              sync.WaitGroup
 	rexClient       *rest.RexClient
 	listing         listing.Service
 	userInformation listing.User
@@ -28,13 +32,17 @@ type controller struct {
 
 // NewController creates a new rexOS controller for easy REX interactions
 func NewController(domain string) Controller {
-	return &controller{
+	c := &controller{
 		rexClient: rest.NewRexClient(domain),
 	}
+	// make sure to wait till authentication is done
+	c.wg.Add(1)
+	return c
 }
 
 func (c *controller) Authenticate(clientID, clientSecret string) error {
 
+	defer c.wg.Done()
 	_, err := c.rexClient.ConnectWithClientCredentials(clientID, clientSecret)
 	if err != nil {
 		return err
@@ -55,9 +63,14 @@ func (c *controller) Authenticate(clientID, clientSecret string) error {
 
 // GetProjects returns all projects of the user
 func (c *controller) GetProjects() ([]listing.Project, error) {
+	c.wg.Wait()
+	if c.listing == nil {
+		return []listing.Project{}, fmt.Errorf("Authentication not successful")
+	}
 	return c.listing.GetProjects()
 }
 
 func (c *controller) GetUserInformation() listing.User {
+	c.wg.Wait()
 	return c.userInformation
 }
