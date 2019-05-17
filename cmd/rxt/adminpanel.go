@@ -22,11 +22,11 @@ func NewAdminPanel() *AdminPanel {
 }
 
 func (p *AdminPanel) name() string {
-	return "AdminPanel"
+	return "Admin"
 }
 
 func (p *AdminPanel) key() tcell.Key {
-	return tcell.KeyF2
+	return KeySwitchToAdmin
 }
 
 func (p *AdminPanel) content() tview.Primitive {

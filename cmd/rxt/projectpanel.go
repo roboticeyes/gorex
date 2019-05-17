@@ -44,7 +44,7 @@ func NewProjectPanel(c *ViewController) *ProjectPanel {
 		Table:      tview.NewTable().SetFixed(1, 1).SetSelectable(true, false),
 		controller: c,
 	}
-	p.SetTitle("Projects")
+	p.SetTitle("Project")
 	p.SetBorder(true)
 
 	p.Table.SetSelectedFunc(func(row, column int) {
@@ -78,11 +78,11 @@ func NewProjectPanel(c *ViewController) *ProjectPanel {
 // }
 
 func (pp *ProjectPanel) name() string {
-	return "ProjectPanel"
+	return "Project"
 }
 
 func (pp *ProjectPanel) key() tcell.Key {
-	return tcell.KeyF1
+	return KeySwitchToProject
 }
 
 func (pp *ProjectPanel) content() tview.Primitive {

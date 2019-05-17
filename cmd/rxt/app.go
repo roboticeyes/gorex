@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
 )
@@ -36,12 +38,8 @@ func NewApp(c *ViewController) UIRunner {
 		AddItem(tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter).SetText("[blue]"+c.GetConfiguration().Default), 0, 1, 1, 1, 0, 0, false).
 		AddItem(app.status, 0, 2, 1, 1, 0, 0, false)
 
-	// toolbar
-	toolbar := tview.NewTextView()
-	toolbar.SetText("F1 Projects")
-
 	// create all panels
-	app.createPanels()
+	toolbar := app.createPanels()
 
 	root := tview.NewFlex().SetDirection(tview.FlexRow)
 	root.AddItem(titleBar, 1, 0, false)
@@ -90,11 +88,15 @@ func (a *App) connect() {
 	}
 }
 
-func (a *App) createPanels() {
+func (a *App) createPanels() *tview.TextView {
 	a.main = tview.NewPages()
 
+	a.panels = append(a.panels, NewHelpPanel())
 	a.panels = append(a.panels, NewProjectPanel(a.controller))
 	a.panels = append(a.panels, NewAdminPanel())
+
+	// toolbar
+	toolbar := tview.NewTextView().SetDynamicColors(true).SetRegions(false).SetWrap(false)
 
 	for i, p := range a.panels {
 		visible := false
@@ -102,5 +104,7 @@ func (a *App) createPanels() {
 			visible = true
 		}
 		a.main.AddPage(p.name(), p.content(), true, visible)
+		fmt.Fprintf(toolbar, `%s [darkcyan]%s[white]  `, keyString[p.key()], p.name())
 	}
+	return toolbar
 }
