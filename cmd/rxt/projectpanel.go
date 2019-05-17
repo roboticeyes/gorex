@@ -32,15 +32,17 @@ func init() {
 	}
 }
 
-// ProjectsView shows a table of rexOS projects
-type ProjectsView struct {
+// ProjectPanel shows a table of rexOS projects
+type ProjectPanel struct {
 	*tview.Table
+	controller *ViewController
 }
 
-// NewProjectView creates a new UI component
-func NewProjectView() *ProjectsView {
-	p := &ProjectsView{
-		Table: tview.NewTable().SetFixed(1, 1).SetSelectable(true, false),
+// NewProjectPanel creates a new UI component
+func NewProjectPanel(c *ViewController) *ProjectPanel {
+	p := &ProjectPanel{
+		Table:      tview.NewTable().SetFixed(1, 1).SetSelectable(true, false),
+		controller: c,
 	}
 	p.SetTitle("Projects")
 	p.SetBorder(true)
@@ -67,22 +69,41 @@ func NewProjectView() *ProjectsView {
 	return p
 }
 
-// InputHandler returns the handler of the primitive
-func (v *ProjectsView) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-	return v.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
-		fmt.Println(event)
+// // InputHandler returns the handler of the primitive
+// func (pp *ProjectPanel) InputHandler() func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
+// 	return pp.WrapInputHandler(func(event *tcell.EventKey, setFocus func(p tview.Primitive)) {
+// 		fmt.Println(event)
+//
+// 	})
+// }
 
-	})
+func (pp *ProjectPanel) name() string {
+	return "ProjectPanel"
+}
 
-	// return v.Table.InputHandler()
+func (pp *ProjectPanel) key() tcell.Key {
+	return tcell.KeyF1
+}
+
+func (pp *ProjectPanel) content() tview.Primitive {
+	return pp
+}
+
+func (pp *ProjectPanel) update() error {
+	p, err := pp.controller.GetProjects()
+	if err != nil {
+		return err
+	}
+	pp.SetProjects(pp.controller.GetUserID(), p)
+	return nil
 }
 
 // SetProjects sets the projects for this view. The owner is used to color shared project differently
-func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
+func (pp *ProjectPanel) SetProjects(owner string, projects []listing.Project) {
 
 	for i, h := range tableHeader {
 
-		v.SetCell(0, i, &tview.TableCell{
+		pp.SetCell(0, i, &tview.TableCell{
 			Text:          h,
 			Color:         tcell.ColorAzure,
 			Align:         alignment[i],
@@ -98,14 +119,14 @@ func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
 			color = tcell.ColorGray
 		}
 
-		v.SetCell(row+1, 0, &tview.TableCell{
+		pp.SetCell(row+1, 0, &tview.TableCell{
 			Text:          p.Urn,
 			Color:         color,
 			Align:         alignment[0],
 			NotSelectable: false,
 		})
 
-		v.SetCell(row+1, 1, &tview.TableCell{
+		pp.SetCell(row+1, 1, &tview.TableCell{
 			Text:          p.Name,
 			Color:         color,
 			Align:         alignment[1],
@@ -113,25 +134,25 @@ func (v *ProjectsView) SetProjects(owner string, projects []listing.Project) {
 			Expansion:     1,
 		})
 
-		v.SetCell(row+1, 2, &tview.TableCell{
+		pp.SetCell(row+1, 2, &tview.TableCell{
 			Text:          strconv.Itoa(p.NumberOfProjectFiles),
 			Color:         color,
 			Align:         alignment[2],
 			NotSelectable: false,
 		})
-		v.SetCell(row+1, 3, &tview.TableCell{
+		pp.SetCell(row+1, 3, &tview.TableCell{
 			Text:          strconv.Itoa(p.TotalProjectFileSize / 1024),
 			Color:         color,
 			Align:         alignment[3],
 			NotSelectable: false,
 		})
-		v.SetCell(row+1, 4, &tview.TableCell{
+		pp.SetCell(row+1, 4, &tview.TableCell{
 			Text:          strconv.FormatBool(p.Public),
 			Color:         color,
 			Align:         alignment[4],
 			NotSelectable: false,
 		})
 
-		v.ScrollToBeginning()
+		pp.ScrollToBeginning()
 	}
 }
