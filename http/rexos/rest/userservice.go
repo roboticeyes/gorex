@@ -4,8 +4,6 @@ package rest
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/tidwall/gjson"
 	"net/http"
 )
@@ -19,10 +17,10 @@ var (
 
 // UserService provides the calls for accessing REX user resource
 type UserService interface {
-	GetCurrentUser() (*User, error)
-	GetTotalNumberOfUsers() (uint64, error)
-	FindUserByEmail(email string) (*User, error)
-	FindUserByUserID(userID string) (*User, error)
+	GetCurrentUser() (*User, HTTPStatus)
+	GetTotalNumberOfUsers() (uint64, HTTPStatus)
+	FindUserByEmail(email string) (*User, HTTPStatus)
+	FindUserByUserID(userID string) (*User, HTTPStatus)
 }
 
 type userService struct {
@@ -37,61 +35,61 @@ func NewUserService(client HTTPClient) UserService {
 // GetCurrentUser gets the user details of the current user.
 //
 // The current user is the one which has been identified by the authentication token.
-func (s *userService) GetCurrentUser() (*User, error) {
+func (s *userService) GetCurrentUser() (*User, HTTPStatus) {
 
 	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiCurrentUser, nil)
 
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, err
+		return &User{}, HTTPStatus{code, err.Error()}
 	}
 
 	var u User
 	err = json.Unmarshal(body, &u)
 	if err != nil {
-		return nil, fmt.Errorf("Cannot get user: %s", err)
+		return &User{}, HTTPStatus{500, err.Error()}
 	}
 	u.SelfLink = u.Links.User.Href // assign self link
-	return &u, err
+	return &u, HTTPStatus{Code: http.StatusOK}
 }
 
 // GetTotalNumberOfUsers returns the number of registered users.
 // Requires admin permissions!
-func (s *userService) GetTotalNumberOfUsers() (uint64, error) {
+func (s *userService) GetTotalNumberOfUsers() (uint64, HTTPStatus) {
 
 	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiUsers, nil)
 
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return 0, err
+		return 0, HTTPStatus{500, err.Error()}
 	}
-	return gjson.Get(string(body), "page.totalElements").Uint(), nil
+	return gjson.Get(string(body), "page.totalElements").Uint(), HTTPStatus{Code: code}
 }
 
 // FindUserByUserID returns the user information for a given user ID
 // Requires admin permissions!
-func (s *userService) FindUserByUserID(userID string) (*User, error) {
+func (s *userService) FindUserByUserID(userID string) (*User, HTTPStatus) {
 
 	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiFindByID+userID, nil)
 
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, err
+		return &User{}, HTTPStatus{500, err.Error()}
 	}
 
 	var user User
 	err = json.Unmarshal(body, &user)
-	return &user, nil
+	return &user, HTTPStatus{Code: code}
 }
 
 // FindUserByEmail retrieves the user ID of a given email address
-func (s *userService) FindUserByEmail(email string) (*User, error) {
+func (s *userService) FindUserByEmail(email string) (*User, HTTPStatus) {
 
 	req, _ := http.NewRequest("GET", s.client.GetAPIURL()+apiFindByEmail+email, nil)
 
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, err
+		return &User{}, HTTPStatus{code, err.Error()}
 	}
 
 	// check if the user can be found
@@ -99,7 +97,7 @@ func (s *userService) FindUserByEmail(email string) (*User, error) {
 	err = json.Unmarshal(body, &user)
 
 	if err != nil || user.UserID == "" {
-		return &User{}, errors.New("User not found")
+		return &User{}, HTTPStatus{Code: http.StatusNotFound}
 	}
-	return &user, nil
+	return &user, HTTPStatus{Code: http.StatusOK}
 }

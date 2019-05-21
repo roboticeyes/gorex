@@ -5,7 +5,6 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -28,10 +27,10 @@ var (
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
-	FindAllByUser(owner string) (*ProjectDetailedList, error)
-	FindByNameAndOwner(name, owner string) (*Project, error)
+	FindAllByUser(owner string) (*ProjectDetailedList, HTTPStatus)
+	FindByNameAndOwner(name, owner string) (*Project, HTTPStatus)
 
-	UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) error
+	UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
 }
 
 type projectService struct {
@@ -44,26 +43,26 @@ func NewProjectService(client HTTPClient) ProjectService {
 }
 
 // FindByNameAndOwner returns the unique identified project by userId and project name
-func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, error) {
+func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, HTTPStatus) {
 
 	query := s.client.GetAPIURL() + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
 	req, _ := http.NewRequest("GET", query, nil)
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, err
+		return &Project{}, HTTPStatus{500, err.Error()}
 	}
 
 	var project Project
 	err = json.Unmarshal(body, &project)
-	return &project, err
+	return &project, HTTPStatus{Code: code}
 }
 
-func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, error) {
+func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, HTTPStatus) {
 	query := s.client.GetAPIURL() + apiProjectAllByUser + user
 	req, _ := http.NewRequest("GET", query, nil)
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return &ProjectDetailedList{}, err
+		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
 	}
 
 	var projects ProjectDetailedList
@@ -80,14 +79,14 @@ func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, error
 			projects.Embedded.Projects[i].Urn = values[1]
 		}
 	}
-	return &projects, err
+	return &projects, HTTPStatus{Code: code}
 }
 
 // UploadProjectFile uploads a new project file.
 //
 // The file requires a projectFileName, which is displayed, but also a fileName which includes the suffix. The fileName
 // is used for detecting the mimetype. The content of the file will be read from the `io.Reader r`.
-func (s *projectService) UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) error {
+func (s *projectService) UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus {
 
 	b := new(bytes.Buffer)
 
@@ -107,9 +106,9 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 	// Only create project rex reference if no one exists yet
 	var rexReferenceSelfLink string
 	if len(project.Embedded.RexReferences) < 2 {
-		selfLink, err := s.createRexReference(&rexReference)
-		if err != nil {
-			return err
+		selfLink, status := s.createRexReference(&rexReference)
+		if status.Code == 500 {
+			return status
 		}
 		rexReferenceSelfLink = selfLink
 	} else {
@@ -140,9 +139,9 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 	// Create project file
 	json.NewEncoder(b).Encode(projectFile)
 	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiProjectFiles, b)
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return fmt.Errorf("Got server response %s with error %s", body, err)
+		return HTTPStatus{code, err.Error()}
 	}
 
 	// Upload the actual payload
@@ -150,7 +149,7 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 	return s.uploadFileContent(uploadURL, fileName, r)
 }
 
-func (s *projectService) uploadFileContent(uploadURL string, fileName string, r io.Reader) error {
+func (s *projectService) uploadFileContent(uploadURL string, fileName string, r io.Reader) HTTPStatus {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -161,21 +160,21 @@ func (s *projectService) uploadFileContent(uploadURL string, fileName string, r 
 	req, _ := http.NewRequest("POST", uploadURL, body)
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 
-	_, err := s.client.Send(req)
-	return err
+	_, code, err := s.client.Send(req)
+	return HTTPStatus{code, err.Error()}
 }
 
-func (s *projectService) createRexReference(r *RexReference) (string, error) {
+func (s *projectService) createRexReference(r *RexReference) (string, HTTPStatus) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
 
 	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiRexReferences, b)
 	req.Header.Add("content-type", "application/json")
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 
 	if err != nil {
-		return "", fmt.Errorf("Got server response %s with error %s", body, err)
+		return "", HTTPStatus{500, err.Error()}
 	}
-	return gjson.Get(string(body), "_links.self.href").String(), nil
+	return gjson.Get(string(body), "_links.self.href").String(), HTTPStatus{Code: code}
 }

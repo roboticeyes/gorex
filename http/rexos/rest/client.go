@@ -31,9 +31,24 @@ type RexClient struct {
 // REX request. This interface should be used for any REX API call.
 // The RexClient is implementing this interface and performs the actual call.
 type HTTPClient interface {
-	GetTokenURL() string
 	GetAPIURL() string
-	Send(req *http.Request) ([]byte, error)
+	// Send performs the actual HTTP request and gets returns (body, statusCode, error)
+	Send(req *http.Request) ([]byte, int, error)
+}
+
+// HTTPStatus is the return value for every REST call.If the Message is not set,
+// the default status text is returned
+type HTTPStatus struct {
+	Code    int
+	Message string
+}
+
+// Implements the error interface
+func (h HTTPStatus) Error() string {
+	if h.Message != "" {
+		return h.Message
+	}
+	return http.StatusText(h.Code)
 }
 
 // NewRexClient returns a new instance of a RexClient
@@ -61,7 +76,7 @@ func NewRexClientWithToken(domain string, token oauth2.Token) *RexClient {
 // Returns nil if connection was ok, else returns the proper error
 func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) (*oauth2.Token, error) {
 
-	req, err := http.NewRequest("POST", c.GetTokenURL(), strings.NewReader("grant_type=client_credentials"))
+	req, err := http.NewRequest("POST", c.getTokenURL(), strings.NewReader("grant_type=client_credentials"))
 	if err != nil {
 		return nil, err
 	}
@@ -95,21 +110,22 @@ func (c *RexClient) ConnectWithClientCredentials(clientID, clientSecret string) 
 
 // Send performs the actual HTTP call and reads the full response into a byte array which
 // will be returned in case of success. Make sure that the proper token is set before making this call
-func (c *RexClient) Send(req *http.Request) ([]byte, error) {
+func (c *RexClient) Send(req *http.Request) ([]byte, int, error) {
 
 	req.Header.Add("accept", "application/json")
 	c.Token.SetAuthHeader(req)
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 	// this is required to properly empty the buffer for the next call
 	defer func() {
 		io.Copy(ioutil.Discard, resp.Body)
 	}()
 
-	return ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	return body, resp.StatusCode, err
 }
 
 // GetAPIURL returns the REX API URL for all API calls
@@ -117,7 +133,7 @@ func (c *RexClient) GetAPIURL() string {
 	return c.domain + apiBase
 }
 
-// GetTokenURL returns the REX base URL for the token authentication
-func (c *RexClient) GetTokenURL() string {
+// getTokenURL returns the REX base URL for the token authentication
+func (c *RexClient) getTokenURL() string {
 	return c.domain + apiToken
 }

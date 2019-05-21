@@ -9,6 +9,7 @@ import (
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -160,10 +161,10 @@ func authenticate() {
 
 func listProjects() {
 	projectService := rexos.NewProjectService(rexClient)
-	projects, err := projectService.FindAllByUser(rexUser.UserID)
+	projects, status := projectService.FindAllByUser(rexUser.UserID)
 
-	if err != nil {
-		fmt.Println("Cannot get project", err)
+	if status.Code != http.StatusOK {
+		fmt.Println("Cannot get project", status)
 	}
 
 	for _, p := range projects.Embedded.Projects {
@@ -175,10 +176,10 @@ func listProjects() {
 
 func listProject(projectName string) {
 	projectService := rexos.NewProjectService(rexClient)
-	project, err := projectService.FindByNameAndOwner(projectName, rexUser.UserID)
+	project, status := projectService.FindByNameAndOwner(projectName, rexUser.UserID)
 
-	if err != nil {
-		fmt.Println("Cannot get project", err)
+	if status.Code != http.StatusOK {
+		fmt.Println("Cannot get project", status)
 	}
 
 	fmt.Println(project)

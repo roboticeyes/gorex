@@ -1,6 +1,8 @@
 package rest
 
 import (
+	"net/http"
+
 	"github.com/roboticeyes/gorex/http/rexos/listing"
 )
 
@@ -20,10 +22,10 @@ func NewDataProvider(c *RexClient) *DataProviderRest {
 	d.projectService = NewProjectService(d.rexClient)
 	d.userService = NewUserService(d.rexClient)
 
-	var err error
-	d.rexUser, err = d.userService.GetCurrentUser()
-	if err != nil {
-		panic(err)
+	var status HTTPStatus
+	d.rexUser, status = d.userService.GetCurrentUser()
+	if status.Code != http.StatusOK {
+		panic(status)
 	}
 	return &d
 }
@@ -31,9 +33,9 @@ func NewDataProvider(c *RexClient) *DataProviderRest {
 // GetProjects fetches the projects and returns a list of projects
 func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 
-	projects, err := d.projectService.FindAllByUser(d.rexUser.UserID)
-	if err != nil {
-		return []listing.Project{}, err
+	projects, status := d.projectService.FindAllByUser(d.rexUser.UserID)
+	if status.Code != http.StatusOK {
+		return []listing.Project{}, status
 	}
 
 	// convert data
@@ -54,9 +56,9 @@ func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 // GetUserInformation delivers information about the authenticated user
 func (d *DataProviderRest) GetUserInformation() (listing.User, error) {
 
-	user, err := d.userService.GetCurrentUser()
-	if err != nil {
-		return listing.User{}, err
+	user, status := d.userService.GetCurrentUser()
+	if status.Code != http.StatusOK {
+		return listing.User{}, status
 	}
 
 	return listing.User{

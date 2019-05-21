@@ -14,7 +14,7 @@ var (
 
 // BimModelService provides the calls for accessing REX models
 type BimModelService interface {
-	GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, error)
+	GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, HTTPStatus)
 }
 
 type bimModelService struct {
@@ -27,31 +27,31 @@ func NewBimModelService(client HTTPClient) BimModelService {
 }
 
 // GetBimModelByID returns a valid BIM model by the given ID
-func (s *bimModelService) GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, error) {
+func (s *bimModelService) GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, HTTPStatus) {
 
 	query := s.client.GetAPIURL() + apiBimModels + "/" + strconv.FormatUint(id, 10)
 	req, _ := http.NewRequest("GET", query, nil)
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, nil, err
+		return &BimModel{}, &SpatialStructure{}, HTTPStatus{code, err.Error()}
 	}
 
 	var bimModel BimModel
 	err = json.Unmarshal(body, &bimModel)
 
-	spatial, err := s.getSpatialStructure(bimModel.Links.SpatialStructure.Href)
-	return &bimModel, spatial, err
+	spatial, status := s.getSpatialStructure(bimModel.Links.SpatialStructure.Href)
+	return &bimModel, spatial, status
 }
 
-func (s *bimModelService) getSpatialStructure(url string) (*SpatialStructure, error) {
+func (s *bimModelService) getSpatialStructure(url string) (*SpatialStructure, HTTPStatus) {
 
 	req, _ := http.NewRequest("GET", url, nil)
-	body, err := s.client.Send(req)
+	body, code, err := s.client.Send(req)
 	if err != nil {
-		return nil, err
+		return &SpatialStructure{}, HTTPStatus{500, err.Error()}
 	}
 
 	var spatial SpatialStructure
 	err = json.Unmarshal(body, &spatial)
-	return &spatial, nil
+	return &spatial, HTTPStatus{Code: code}
 }
