@@ -64,11 +64,14 @@ func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, HTTPS
 	if err != nil {
 		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
 	}
+	if code != http.StatusOK {
+		return &ProjectDetailedList{}, HTTPStatus{Code: code}
+	}
 
 	var projects ProjectDetailedList
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
-		panic(err)
+		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
 	}
 
 	// set Urn with legacy ID if not retrieved from backend
