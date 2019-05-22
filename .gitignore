@@ -19,3 +19,5 @@
 /cmd/rxt/token
 /rxt
 /token
+/accesstoken
+/cmd/rxt/config.json

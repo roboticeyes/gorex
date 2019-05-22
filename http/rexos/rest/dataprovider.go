@@ -7,10 +7,8 @@ import (
 	"github.com/roboticeyes/gorex/http/rexos/listing"
 )
 
-// DataProviderRest provides the data from the rexOS data interface. To function properly, the data provider requires
-// to have a valid connected rexClient.
+// DataProviderRest provides the data from the rexOS data interface.
 type DataProviderRest struct {
-	rexClient      *RexClient
 	client         *Client
 	rexUser        *User
 	projectService ProjectService
@@ -18,24 +16,33 @@ type DataProviderRest struct {
 }
 
 // NewDataProvider returns a new instance of the rexOS data rest interface
-func NewDataProvider(c *RexClient) *DataProviderRest {
+func NewDataProvider(domain string) *DataProviderRest {
 	var d DataProviderRest
-	d.rexClient = c
+	d.client = NewRestClient(domain)
 	d.projectService = NewProjectService(d.client)
-	d.userService = NewUserService(d.rexClient)
-
-	var status HTTPStatus
-	d.rexUser, status = d.userService.GetCurrentUser()
-	if status.Code != http.StatusOK {
-		panic(status)
-	}
+	d.userService = NewUserService(d.client)
 	return &d
 }
 
-// GetProjects fetches the projects and returns a list of projects
-func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
+// GetUser fetches the user information and stores it in the data provider.
+func (d *DataProviderRest) GetUser(ctx context.Context) (*User, error) {
+	var status HTTPStatus
+	d.rexUser, status = d.userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		return nil, status
+	}
+	return d.rexUser, nil
+}
 
-	// TODO
+// GetProjects fetches the projects and returns a list of projects
+func (d *DataProviderRest) GetProjects(ctx context.Context) ([]listing.Project, error) {
+
+	if d.rexUser == nil {
+		_, err := d.GetUser(ctx)
+		if err != nil {
+			return []listing.Project{}, err
+		}
+	}
 	projects, status := d.projectService.FindAllByUser(context.Background(), d.rexUser.UserID)
 	if status.Code != http.StatusOK {
 		return []listing.Project{}, status
@@ -57,18 +64,20 @@ func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 }
 
 // GetUserInformation delivers information about the authenticated user
-func (d *DataProviderRest) GetUserInformation() (listing.User, error) {
+func (d *DataProviderRest) GetUserInformation(ctx context.Context) (listing.User, error) {
 
-	user, status := d.userService.GetCurrentUser()
-	if status.Code != http.StatusOK {
-		return listing.User{}, status
+	if d.rexUser == nil {
+		_, err := d.GetUser(ctx)
+		if err != nil {
+			return listing.User{}, err
+		}
 	}
 
 	return listing.User{
-		UserID:    user.UserID,
-		Username:  user.Username,
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
+		UserID:    d.rexUser.UserID,
+		Username:  d.rexUser.Username,
+		Email:     d.rexUser.Email,
+		FirstName: d.rexUser.FirstName,
+		LastName:  d.rexUser.LastName,
 	}, nil
 }

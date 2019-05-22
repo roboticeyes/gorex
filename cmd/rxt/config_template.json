@@ -1,0 +1,11 @@
+{
+    "default": "rex",
+    "environments": [
+        {
+            "name": "rex",
+            "domain": "rex.robotic-eyes.com",
+            "clientId": "<clientID>",
+            "clientSecret": "<clientSecret>"
+        }
+    ]
+}

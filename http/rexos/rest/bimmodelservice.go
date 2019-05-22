@@ -3,8 +3,8 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
-	"net/http"
 	"strconv"
 )
 
@@ -14,24 +14,23 @@ var (
 
 // BimModelService provides the calls for accessing REX models
 type BimModelService interface {
-	GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, HTTPStatus)
+	GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, HTTPStatus)
 }
 
 type bimModelService struct {
-	client HTTPClient
+	client *Client
 }
 
 // NewBimModelService creates a new project projectService
-func NewBimModelService(client HTTPClient) BimModelService {
+func NewBimModelService(client *Client) BimModelService {
 	return &bimModelService{client}
 }
 
 // GetBimModelByID returns a valid BIM model by the given ID
-func (s *bimModelService) GetBimModelByID(id uint64) (*BimModel, *SpatialStructure, HTTPStatus) {
+func (s *bimModelService) GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, HTTPStatus) {
 
-	query := s.client.GetAPIURL() + apiBimModels + "/" + strconv.FormatUint(id, 10)
-	req, _ := http.NewRequest("GET", query, nil)
-	body, code, err := s.client.Send(req)
+	query := s.client.Domain + apiBimModels + "/" + strconv.FormatUint(id, 10)
+	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &BimModel{}, &SpatialStructure{}, HTTPStatus{code, err.Error()}
 	}
@@ -39,14 +38,13 @@ func (s *bimModelService) GetBimModelByID(id uint64) (*BimModel, *SpatialStructu
 	var bimModel BimModel
 	err = json.Unmarshal(body, &bimModel)
 
-	spatial, status := s.getSpatialStructure(bimModel.Links.SpatialStructure.Href)
+	spatial, status := s.getSpatialStructure(ctx, bimModel.Links.SpatialStructure.Href)
 	return &bimModel, spatial, status
 }
 
-func (s *bimModelService) getSpatialStructure(url string) (*SpatialStructure, HTTPStatus) {
+func (s *bimModelService) getSpatialStructure(ctx context.Context, url string) (*SpatialStructure, HTTPStatus) {
 
-	req, _ := http.NewRequest("GET", url, nil)
-	body, code, err := s.client.Send(req)
+	body, code, err := s.client.Get(ctx, url)
 	if err != nil {
 		return &SpatialStructure{}, HTTPStatus{500, err.Error()}
 	}

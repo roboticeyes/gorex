@@ -1,15 +1,19 @@
 package listing
 
+import (
+	"context"
+)
+
 // Service providing listing functions
 type Service interface {
-	GetProjects() ([]Project, error)
-	GetUserInformation() (User, error)
+	GetProjects(ctx context.Context) ([]Project, error)
+	GetUserInformation(ctx context.Context) (User, error)
 }
 
 // DataProvider provides access to the data
 type DataProvider interface {
-	GetProjects() ([]Project, error)
-	GetUserInformation() (User, error)
+	GetProjects(ctx context.Context) ([]Project, error)
+	GetUserInformation(ctx context.Context) (User, error)
 }
 
 type listingService struct {
@@ -22,10 +26,10 @@ func NewService(p DataProvider) Service {
 }
 
 // GetProjects returns all projects of the user
-func (s *listingService) GetProjects() ([]Project, error) {
-	return s.provider.GetProjects()
+func (s *listingService) GetProjects(ctx context.Context) ([]Project, error) {
+	return s.provider.GetProjects(ctx)
 }
 
-func (s *listingService) GetUserInformation() (User, error) {
-	return s.provider.GetUserInformation()
+func (s *listingService) GetUserInformation(ctx context.Context) (User, error) {
+	return s.provider.GetUserInformation(ctx)
 }

@@ -6,14 +6,17 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
-// AuthorizationType is used for the key of the authorization token for the context
-type AuthorizationType string
+// AccessTokenType is used for the key of the authorization token for the context
+type AccessTokenType string
 
 const (
-	// AuthorizationKey is the key for the context information
-	AuthorizationKey AuthorizationType = "authorization"
+	// AccessTokenKey is the key for the context information. The context needs to store the
+	// full access token with "bearer <token>"
+	AccessTokenKey AccessTokenType = "authorization"
 )
 
 // Client is the client which is used to send requests to the rexOS. The client
@@ -38,9 +41,10 @@ func NewRestClient(domain string) *Client {
 // the given context.
 func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 
-	authKey := ctx.Value(AuthorizationKey)
+	authKey := ctx.Value(AccessTokenKey)
 
 	if authKey == nil {
+		log.Error("Missing token in context")
 		return nil, http.StatusForbidden, fmt.Errorf("Missing token in context")
 	}
 
@@ -52,6 +56,7 @@ func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
+		log.Error("GET request error:", err)
 		return nil, resp.StatusCode, err
 	}
 	// this is required to properly empty the buffer for the next call
@@ -76,6 +81,7 @@ func (c *Client) Post(ctx context.Context, query string, payload io.Reader, cont
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
+		log.Error("POST request error:", err)
 		return nil, resp.StatusCode, err
 	}
 	// this is required to properly empty the buffer for the next call

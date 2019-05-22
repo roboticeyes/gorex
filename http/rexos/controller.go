@@ -9,6 +9,7 @@
 package rexos
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -24,8 +25,10 @@ type Controller interface {
 }
 
 type controller struct {
+	domain          string
+	ctx             context.Context
 	wg              sync.WaitGroup
-	rexClient       *rest.RexClient
+	client          *rest.Client
 	listing         listing.Service
 	userInformation listing.User
 }
@@ -33,7 +36,9 @@ type controller struct {
 // NewController creates a new rexOS controller for easy REX interactions
 func NewController(domain string) Controller {
 	c := &controller{
-		rexClient: rest.NewRexClient(domain),
+		domain: domain,
+		client: rest.NewRestClient(domain),
+		ctx:    context.Background(),
 	}
 	// make sure to wait till authentication is done
 	c.wg.Add(1)
@@ -43,17 +48,20 @@ func NewController(domain string) Controller {
 func (c *controller) Authenticate(clientID, clientSecret string) error {
 
 	defer c.wg.Done()
-	_, err := c.rexClient.ConnectWithClientCredentials(clientID, clientSecret)
+	token, err := rest.Authenticate(c.domain, clientID, clientSecret)
 	if err != nil {
 		return err
 	}
 
+	// update context with token
+	c.ctx = context.WithValue(c.ctx, rest.AccessTokenKey, token)
+
 	// Get all services
-	restData := rest.NewDataProvider(c.rexClient)
+	restData := rest.NewDataProvider(c.domain)
 	c.listing = listing.NewService(restData)
 
 	// Get and cache user information
-	c.userInformation, err = c.listing.GetUserInformation()
+	c.userInformation, err = c.listing.GetUserInformation(c.ctx)
 	if err != nil {
 		return err
 	}
@@ -67,7 +75,7 @@ func (c *controller) GetProjects() ([]listing.Project, error) {
 	if c.listing == nil {
 		return []listing.Project{}, fmt.Errorf("Authentication not successful")
 	}
-	return c.listing.GetProjects()
+	return c.listing.GetProjects(c.ctx)
 }
 
 func (c *controller) GetUserInformation() listing.User {
