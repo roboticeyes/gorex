@@ -4,6 +4,7 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"mime/multipart"
@@ -27,27 +28,26 @@ var (
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
-	FindAllByUser(owner string) (*ProjectDetailedList, HTTPStatus)
-	FindByNameAndOwner(name, owner string) (*Project, HTTPStatus)
+	FindAllByUser(ctx context.Context, owner string) (*ProjectDetailedList, HTTPStatus)
+	FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus)
 
-	UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
+	UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
 }
 
 type projectService struct {
-	client HTTPClient
+	client *Client
 }
 
 // NewProjectService creates a new project projectService
-func NewProjectService(client HTTPClient) ProjectService {
+func NewProjectService(client *Client) ProjectService {
 	return &projectService{client}
 }
 
 // FindByNameAndOwner returns the unique identified project by userId and project name
-func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, HTTPStatus) {
+func (s *projectService) FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus) {
 
-	query := s.client.GetAPIURL() + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
-	req, _ := http.NewRequest("GET", query, nil)
-	body, code, err := s.client.Send(req)
+	query := s.client.Domain + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
+	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &Project{}, HTTPStatus{500, err.Error()}
 	}
@@ -57,10 +57,9 @@ func (s *projectService) FindByNameAndOwner(name, owner string) (*Project, HTTPS
 	return &project, HTTPStatus{Code: code}
 }
 
-func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, HTTPStatus) {
-	query := s.client.GetAPIURL() + apiProjectAllByUser + user
-	req, _ := http.NewRequest("GET", query, nil)
-	body, code, err := s.client.Send(req)
+func (s *projectService) FindAllByUser(ctx context.Context, user string) (*ProjectDetailedList, HTTPStatus) {
+	query := s.client.Domain + apiProjectAllByUser + user
+	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
 	}
@@ -89,7 +88,7 @@ func (s *projectService) FindAllByUser(user string) (*ProjectDetailedList, HTTPS
 //
 // The file requires a projectFileName, which is displayed, but also a fileName which includes the suffix. The fileName
 // is used for detecting the mimetype. The content of the file will be read from the `io.Reader r`.
-func (s *projectService) UploadProjectFile(project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus {
+func (s *projectService) UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus {
 
 	b := new(bytes.Buffer)
 
@@ -109,7 +108,7 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 	// Only create project rex reference if no one exists yet
 	var rexReferenceSelfLink string
 	if len(project.Embedded.RexReferences) < 2 {
-		selfLink, status := s.createRexReference(&rexReference)
+		selfLink, status := s.createRexReference(ctx, &rexReference)
 		if status.Code == 500 {
 			return status
 		}
@@ -141,18 +140,17 @@ func (s *projectService) UploadProjectFile(project Project, projectFileName, fil
 
 	// Create project file
 	json.NewEncoder(b).Encode(projectFile)
-	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiProjectFiles, b)
-	body, code, err := s.client.Send(req)
+	body, code, err := s.client.Post(ctx, s.client.Domain+apiProjectFiles, b, "application/json")
 	if err != nil {
 		return HTTPStatus{code, err.Error()}
 	}
 
 	// Upload the actual payload
 	uploadURL := gjson.Get(string(body), "_links.file\\.upload.href").String()
-	return s.uploadFileContent(uploadURL, fileName, r)
+	return s.uploadFileContent(ctx, uploadURL, fileName, r)
 }
 
-func (s *projectService) uploadFileContent(uploadURL string, fileName string, r io.Reader) HTTPStatus {
+func (s *projectService) uploadFileContent(ctx context.Context, uploadURL string, fileName string, r io.Reader) HTTPStatus {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -160,21 +158,16 @@ func (s *projectService) uploadFileContent(uploadURL string, fileName string, r 
 	io.Copy(part, r)
 	writer.Close()
 
-	req, _ := http.NewRequest("POST", uploadURL, body)
-	req.Header.Add("Content-Type", writer.FormDataContentType())
-
-	_, code, err := s.client.Send(req)
+	_, code, err := s.client.Post(ctx, uploadURL, body, writer.FormDataContentType())
 	return HTTPStatus{code, err.Error()}
 }
 
-func (s *projectService) createRexReference(r *RexReference) (string, HTTPStatus) {
+func (s *projectService) createRexReference(ctx context.Context, r *RexReference) (string, HTTPStatus) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
 
-	req, _ := http.NewRequest("POST", s.client.GetAPIURL()+apiRexReferences, b)
-	req.Header.Add("content-type", "application/json")
-	body, code, err := s.client.Send(req)
+	body, code, err := s.client.Post(ctx, s.client.Domain+apiRexReferences, b, "application/json")
 
 	if err != nil {
 		return "", HTTPStatus{500, err.Error()}

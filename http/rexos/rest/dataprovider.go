@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/roboticeyes/gorex/http/rexos/listing"
@@ -10,6 +11,7 @@ import (
 // to have a valid connected rexClient.
 type DataProviderRest struct {
 	rexClient      *RexClient
+	client         *Client
 	rexUser        *User
 	projectService ProjectService
 	userService    UserService
@@ -19,7 +21,7 @@ type DataProviderRest struct {
 func NewDataProvider(c *RexClient) *DataProviderRest {
 	var d DataProviderRest
 	d.rexClient = c
-	d.projectService = NewProjectService(d.rexClient)
+	d.projectService = NewProjectService(d.client)
 	d.userService = NewUserService(d.rexClient)
 
 	var status HTTPStatus
@@ -33,7 +35,8 @@ func NewDataProvider(c *RexClient) *DataProviderRest {
 // GetProjects fetches the projects and returns a list of projects
 func (d *DataProviderRest) GetProjects() ([]listing.Project, error) {
 
-	projects, status := d.projectService.FindAllByUser(d.rexUser.UserID)
+	// TODO
+	projects, status := d.projectService.FindAllByUser(context.Background(), d.rexUser.UserID)
 	if status.Code != http.StatusOK {
 		return []listing.Project{}, status
 	}
