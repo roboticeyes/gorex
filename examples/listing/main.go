@@ -9,20 +9,24 @@ import (
 )
 
 var (
-	rexDomain    = "https://rex.robotic-eyes.com"
+	domain       = "rex.robotic-eyes.com"
 	clientID     = ""
 	clientSecret = ""
 )
 
 func main() {
 
-	controller := creator.NewController(rexDomain)
+	controller := creator.NewController(domain)
 
 	// Authenticate
 	err := controller.Authenticate(clientID, clientSecret)
 	if err != nil {
-		fmt.Println("Cannot authenticate to rexOS: ", err)
+		fmt.Println("Cannot authenticate: ", err)
+		panic(err)
 	}
+
+	// Print user information
+	fmt.Println(controller.GetUser())
 
 	// Get projects
 	projects, err := controller.GetProjects()
