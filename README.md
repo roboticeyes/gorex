@@ -15,6 +15,13 @@ two different main features:
 * Working with the [REX file format](https://github.com/roboticeyes/openrex/blob/master/doc/rex-spec-v1.md)
 * Working with the [rexOS REST API](https://support.robotic-eyes.com/rest/index.html)
 
+## Architecture
+
+The SDK provides a high-level and low-level interface to the rexOS. The `http/creator` package is a higher abstraction,
+whereas the `http/core` delivers access to the low-level HAL API.
+
+![](doc/gorex.png)
+
 ## Installation
 
 > You can install Go by following [these instructions](https://golang.org/doc/install). Please note that Go >= 1.12. is required!
