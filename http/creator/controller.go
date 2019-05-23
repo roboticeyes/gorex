@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/roboticeyes/gorex/http/core"
+	"github.com/roboticeyes/gorex/http/creator/adding"
 	"github.com/roboticeyes/gorex/http/creator/listing"
 )
 
@@ -27,6 +28,7 @@ type Controller struct {
 	wg      sync.WaitGroup
 	client  *core.Client
 	listing listing.Service
+	adding  adding.Service
 	user    listing.User
 }
 
@@ -62,6 +64,7 @@ func (c *Controller) Authenticate(clientID, clientSecret string) error {
 	// Get all services
 	rexAccessor := core.NewController(c.config)
 	c.listing = listing.NewService(rexAccessor)
+	c.adding = adding.NewService(rexAccessor)
 
 	// Get and cache user information
 	c.user, err = c.listing.GetUser(c.ctx)
@@ -82,4 +85,10 @@ func (c *Controller) GetProjects() ([]listing.Project, error) {
 func (c *Controller) GetUser() listing.User {
 	c.wg.Wait()
 	return c.user
+}
+
+// CreateProject creates a new CreatorProject
+func (c *Controller) CreateProject(name string) (*adding.Project, error) {
+	c.wg.Wait()
+	return c.adding.CreateProject(c.ctx, name)
 }

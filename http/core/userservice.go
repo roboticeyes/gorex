@@ -17,14 +17,6 @@ var (
 	apiFindByID    = "/users/search/findByUserId?userId="
 )
 
-// UserService provides the calls for accessing REX user resource
-type UserService interface {
-	GetCurrentUser(ctx context.Context) (*User, HTTPStatus)
-	GetTotalNumberOfUsers(ctx context.Context) (uint64, HTTPStatus)
-	FindUserByEmail(ctx context.Context, email string) (*User, HTTPStatus)
-	FindUserByUserID(ctx context.Context, userID string) (*User, HTTPStatus)
-}
-
 type userService struct {
 	resourceURL string // defines the URL for accessing the project resource (<schema>://<host>)
 	client      *Client

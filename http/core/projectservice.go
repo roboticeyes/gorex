@@ -26,14 +26,6 @@ var (
 	apiProjectFiles          = "/projectFiles/"
 )
 
-// ProjectService provides the calls for accessing REX project(s)
-type ProjectService interface {
-	FindAllByUser(ctx context.Context, owner string) (*ProjectDetailedList, HTTPStatus)
-	FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus)
-
-	UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
-}
-
 type projectService struct {
 	resourceURL string // defines the URL for accessing the project resource (<schema>://<host>)
 	client      *Client
@@ -177,4 +169,64 @@ func (s *projectService) createRexReference(ctx context.Context, r *RexReference
 		return "", HTTPStatus{500, err.Error()}
 	}
 	return gjson.Get(string(body), "_links.self.href").String(), HTTPStatus{Code: code}
+}
+
+func (s *projectService) CreateProject(ctx context.Context, name, owner string) (*Project, HTTPStatus) {
+
+	project := struct {
+		Name  string `json:"name"`
+		Owner string `json:"owner"`
+	}{
+		Name:  name,
+		Owner: owner,
+	}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(project)
+	body, code, err := s.client.Post(ctx, s.resourceURL+apiProjects, b, "application/json")
+	if err != nil {
+		return nil, HTTPStatus{code, err.Error()}
+	}
+	if code != http.StatusCreated {
+		return nil, HTTPStatus{code, "rexOS did not return 201 http code"}
+	}
+
+	var newProject Project
+	err = json.Unmarshal(body, &newProject)
+	if err != nil {
+		return nil, HTTPStatus{http.StatusInternalServerError, "Cannot unmarshal created project"}
+	}
+
+	projectSelfLink := gjson.Get(string(body), "_links.self.href").String()
+	uuid := uuid.New().String()
+
+	// Create a RexReference as well
+	rexReference := RexReference{
+		Project:       projectSelfLink,
+		RootReference: true,
+		Key:           uuid,
+	}
+
+	_, ret := s.CreateRexReference(ctx, rexReference)
+	if ret.Code != http.StatusCreated {
+		// TODO delete project
+		return nil, ret
+	}
+	return &newProject, HTTPStatus{Code: http.StatusCreated}
+}
+
+// CreateRexReference creates a new RexReference
+func (s *projectService) CreateRexReference(ctx context.Context, r RexReference) (string, HTTPStatus) {
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(r)
+
+	body, code, err := s.client.Post(ctx, s.resourceURL+apiRexReferences, b, "application/json")
+	if err != nil {
+		return "", HTTPStatus{code, err.Error()}
+	}
+	if code != 201 {
+		return "", HTTPStatus{Code: code}
+	}
+	return gjson.Get(string(body), "_links.self.href").String(), HTTPStatus{Code: http.StatusCreated}
 }

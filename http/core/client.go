@@ -71,11 +71,18 @@ func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 // binary data upload.
 func (c *Client) Post(ctx context.Context, query string, payload io.Reader, contentType string) ([]byte, int, error) {
 
+	authKey := ctx.Value(AccessTokenKey)
+
+	if authKey == nil {
+		log.Error("Missing token in context")
+		return nil, http.StatusForbidden, fmt.Errorf("Missing token in context")
+	}
+
 	req, _ := http.NewRequest("POST", query, payload)
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("authorization", ctx.Value("authorization").(string))
+	req.Header.Add("authorization", authKey.(string))
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {

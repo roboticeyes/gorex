@@ -2,8 +2,11 @@ package core
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 
+	"github.com/roboticeyes/gorex/http/creator/adding"
 	"github.com/roboticeyes/gorex/http/creator/listing"
 )
 
@@ -16,6 +19,22 @@ type Controller struct {
 	rexUser        *User
 	projectService ProjectService
 	userService    UserService
+}
+
+// ProjectService provides the calls for accessing REX project(s)
+type ProjectService interface {
+	FindAllByUser(ctx context.Context, owner string) (*ProjectDetailedList, HTTPStatus)
+	FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus)
+	CreateProject(ctx context.Context, name, owner string) (*Project, HTTPStatus)
+	UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
+}
+
+// UserService provides the calls for accessing REX user resource
+type UserService interface {
+	GetCurrentUser(ctx context.Context) (*User, HTTPStatus)
+	GetTotalNumberOfUsers(ctx context.Context) (uint64, HTTPStatus)
+	FindUserByEmail(ctx context.Context, email string) (*User, HTTPStatus)
+	FindUserByUserID(ctx context.Context, userID string) (*User, HTTPStatus)
 }
 
 // NewController returns a new instance of the rexOS data rest interface
@@ -47,6 +66,7 @@ func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error)
 	var result []listing.Project
 	for _, p := range projects.Embedded.Projects {
 		result = append(result, listing.Project{
+			SelfLink:             p.Links.Self.Href,
 			Urn:                  p.Urn,
 			Name:                 p.Name,
 			Owner:                p.Owner,
@@ -84,4 +104,27 @@ func (d *Controller) getUser(ctx context.Context) (*User, error) {
 		return nil, status
 	}
 	return d.rexUser, nil
+}
+
+// CreateProject create a new project with the according rex reference
+func (d *Controller) CreateProject(ctx context.Context, name string) (*adding.Project, error) {
+	if d.rexUser == nil {
+		_, err := d.getUser(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	p, status := d.projectService.CreateProject(ctx, name, d.rexUser.UserID)
+	if status.Code != http.StatusCreated {
+		return nil, status
+	}
+	if p == nil {
+		return nil, fmt.Errorf("Did not received proper response from rexOS")
+	}
+	return &adding.Project{
+		SelfLink: p.Links.Self.Href,
+		Urn:      p.Urn,
+		Name:     p.Name,
+		Owner:    p.Owner,
+	}, nil
 }
