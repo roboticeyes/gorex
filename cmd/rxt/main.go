@@ -39,5 +39,5 @@ func main() {
 		exit(err.Error(), 1)
 	}
 
-	NewTui(NewViewController(config)).Run()
+	NewApp(NewViewController(config)).Run()
 }

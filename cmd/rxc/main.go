@@ -4,18 +4,19 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"text/scanner"
 
 	"github.com/breiting/socketcluster-client-go/scclient"
-	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
+	rexos "github.com/roboticeyes/gorex/http/core"
 )
 
 // the help text that gets displayed when something goes wrong or when you run
@@ -25,7 +26,7 @@ rxc - command line client for rexOS
 
 actions:
 
-  rxi -v                    prints version
+  rxc -v                    prints version
   rxc help                  print this help
 
   rxc login                 authenticate user and retrieve auth token
@@ -37,16 +38,18 @@ actions:
 `
 
 const (
-	tokenFile = "token"
+	tokenFile = "accesstoken"
 )
 
 var (
-	apiURL       = "" // composed API url based on domain information
+	domain       = "" // the domain name for the rexOS (e.g. rex.robotic-eyes.com)
+	apiURL       = "" // composed API url based on domain information and the api prefix
 	scURL        = "" // composed SocketCluster url based on domain information
 	clientID     = ""
 	clientSecret = ""
-	rexClient    *rexos.RexClient
-	rexUser      *rexos.User
+	token        = "" // holds the token information after login
+	rexClient    *rexos.Client
+	ctx          context.Context
 	project      *rexos.Project
 	// Version string from ldflags
 	Version string
@@ -57,7 +60,8 @@ var (
 func init() {
 
 	if os.Getenv("REX_DOMAIN") != "" {
-		apiURL = "https://" + os.Getenv("REX_DOMAIN")
+		domain = "https://" + os.Getenv("REX_DOMAIN")
+		apiURL = domain + "/api/v2"
 		scURL = "wss://" + os.Getenv("REX_DOMAIN") + "/socketcluster/"
 	}
 	if os.Getenv("REX_CLIENT_ID") != "" {
@@ -78,7 +82,7 @@ func help(exit int) {
 func printSettings() {
 	fmt.Printf("\nsettings:\n\n")
 	if apiURL != "" {
-		fmt.Println("  rexOS domain  ", apiURL)
+		fmt.Println("  rexOS API     ", apiURL)
 	} else {
 		fmt.Println("  rexOS domain   MISSING")
 	}
@@ -103,20 +107,17 @@ func printSettings() {
 func login() {
 	fmt.Println("Logging into rexOS ...")
 
-	cli := rexos.NewRexClient(apiURL)
-
-	token, err := cli.ConnectWithClientCredentials(clientID, clientSecret)
+	token, err := rexos.Authenticate(apiURL, clientID, clientSecret)
 	if err != nil {
 		log.Fatal("Error during connection", err)
 	}
 
-	buf, err := json.Marshal(&token)
-	err = ioutil.WriteFile(tokenFile, buf, 0600)
+	err = ioutil.WriteFile(tokenFile, []byte(token), 0600)
 	if err != nil {
 		log.Fatal("Cannot write token file")
 	}
 	fmt.Printf("Stored token in file: %s \n\n", tokenFile)
-	fmt.Println(token.AccessToken)
+	fmt.Println(token)
 }
 
 // authenticate checks if a token is existing and returns a REX client
@@ -132,38 +133,24 @@ func authenticate() {
 		}
 	}
 
-	// setup client
-	var token oauth2.Token
-	err = json.Unmarshal(buf, &token)
-	if err != nil {
-		log.Fatal("Cannot unmarshal stored token from file ", tokenFile)
-	}
-	rexClient = rexos.NewRexClientWithToken(apiURL, token)
-
-	// get user information
-	userService := rexos.NewUserService(rexClient)
-
-	rexUser, err = userService.GetCurrentUser()
-	if err != nil {
-		log.Fatal("Cannot get user information: ", err)
-	}
-	if rexUser == nil || rexUser.UserID == "" {
-		log.Fatal("User information cannot be retrieved (token expired?), please login again")
-	}
-	fmt.Println()
-	fmt.Println("Logged in as")
-	fmt.Println("  name:        ", rexUser.FirstName, rexUser.LastName)
-	fmt.Println("  rexUsername: ", rexUser.Username)
-	fmt.Println("  rexUserId:   ", rexUser.UserID)
-	fmt.Println()
+	token = string(buf)
+	ctx = context.Background()
+	ctx = context.WithValue(ctx, rexos.AccessTokenKey, token)
 }
 
 func listProjects() {
-	projectService := rexos.NewProjectService(rexClient)
-	projects, err := projectService.FindAllByUser(rexUser.UserID)
+	client := rexos.NewClient()
+	projectService := rexos.NewProjectService(client, apiURL)
+	userService := rexos.NewUserService(client, apiURL)
+	rexUser, status := userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		fmt.Println(status)
+		panic("error getting user")
+	}
+	projects, status := projectService.FindAllByUser(ctx, rexUser.UserID)
 
-	if err != nil {
-		fmt.Println("Cannot get project", err)
+	if status.Code != http.StatusOK {
+		fmt.Println("Cannot get project", status)
 	}
 
 	for _, p := range projects.Embedded.Projects {
@@ -174,11 +161,14 @@ func listProjects() {
 }
 
 func listProject(projectName string) {
-	projectService := rexos.NewProjectService(rexClient)
-	project, err := projectService.FindByNameAndOwner(projectName, rexUser.UserID)
+	client := rexos.NewClient()
+	projectService := rexos.NewProjectService(client, apiURL)
+	userService := rexos.NewUserService(client, apiURL)
+	rexUser, status := userService.GetCurrentUser(ctx)
+	project, status := projectService.FindByNameAndOwner(ctx, projectName, rexUser.UserID)
 
-	if err != nil {
-		fmt.Println("Cannot get project", err)
+	if status.Code != http.StatusOK {
+		fmt.Println("Cannot get project", status)
 	}
 
 	fmt.Println(project)
@@ -186,12 +176,12 @@ func listProject(projectName string) {
 
 // WIP currently not exposed, just for testing
 func bimModel(modelID string) {
-	bimModelService := rexos.NewBimModelService(rexClient)
+	bimModelService := rexos.NewBimModelService(rexClient, apiURL)
 	id, err := strconv.ParseUint(modelID, 10, 64)
 	if err != nil {
 		id = 1000
 	}
-	bimModel, spatial, err := bimModelService.GetBimModelByID(id)
+	bimModel, spatial, err := bimModelService.GetBimModelByID(ctx, id)
 
 	if err != nil {
 		fmt.Println("Cannot get project", err)
@@ -255,8 +245,15 @@ func listenProject(projectName string) {
 	var reader scanner.Scanner
 	var err error
 
-	projectService := rexos.NewProjectService(rexClient)
-	project, err = projectService.FindByNameAndOwner(projectName, rexUser.UserID)
+	restClient := rexos.NewClient()
+	projectService := rexos.NewProjectService(restClient, apiURL)
+	userService := rexos.NewUserService(restClient, apiURL)
+	rexUser, status := userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		fmt.Println(status)
+		panic("error getting user")
+	}
+	project, err = projectService.FindByNameAndOwner(ctx, projectName, rexUser.UserID)
 
 	if err != nil {
 		fmt.Println("Cannot get project", err)
@@ -269,7 +266,7 @@ func listenProject(projectName string) {
 	client.SetBasicListener(onConnect, onConnectError, onDisconnect)
 	client.SetAuthenticationListener(onSetAuthentication, onSocketClusterAuthentication)
 	client.RequestHeader = make(map[string][]string)
-	authToken := "bearer " + rexClient.Token.AccessToken
+	authToken := "bearer " + token
 	client.RequestHeader.Set("Authorization", authToken)
 	go client.Connect()
 

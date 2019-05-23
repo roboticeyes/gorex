@@ -25,18 +25,12 @@ func main() {
 		panic(err)
 	}
 
-	// Print user information
-	fmt.Println(controller.GetUser())
-
-	// Get projects
-	projects, err := controller.GetProjects()
+	// Create a new project
+	project, err := controller.CreateProject("First Project 123")
 	if err != nil {
-		fmt.Println("Cannot get project list: ", err)
+		fmt.Println("Cannot create project: ", err)
+		panic(err)
 	}
 
-	fmt.Printf("Found %d projects ...\n\n", len(projects))
-
-	for _, p := range projects {
-		fmt.Println(p.Name)
-	}
+	fmt.Println("Successfully created project ", project.Name)
 }

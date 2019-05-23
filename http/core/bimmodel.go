@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rest
+package core
 
 // BimModel is the main BIM model structure
 // Currently work in progress, and may change in future!
