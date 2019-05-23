@@ -38,7 +38,7 @@ func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error)
 			return []listing.Project{}, err
 		}
 	}
-	projects, status := d.projectService.FindAllByUser(context.Background(), d.rexUser.UserID)
+	projects, status := d.projectService.FindAllByUser(ctx, d.rexUser.UserID)
 	if status.Code != http.StatusOK {
 		return []listing.Project{}, status
 	}
@@ -62,7 +62,7 @@ func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error)
 func (d *Controller) GetUser(ctx context.Context) (listing.User, error) {
 
 	if d.rexUser == nil {
-		_, err := d.GetUser(ctx)
+		_, err := d.getUser(ctx)
 		if err != nil {
 			return listing.User{}, err
 		}
