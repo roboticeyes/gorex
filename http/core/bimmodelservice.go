@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rest
+package core
 
 import (
 	"context"
@@ -18,18 +18,22 @@ type BimModelService interface {
 }
 
 type bimModelService struct {
-	client *Client
+	resourceURL string // defines the URL for accessing the project resource (<schema>://<host>)
+	client      *Client
 }
 
 // NewBimModelService creates a new project projectService
-func NewBimModelService(client *Client) BimModelService {
-	return &bimModelService{client}
+func NewBimModelService(client *Client, resourceURL string) BimModelService {
+	return &bimModelService{
+		client:      client,
+		resourceURL: resourceURL,
+	}
 }
 
 // GetBimModelByID returns a valid BIM model by the given ID
 func (s *bimModelService) GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, HTTPStatus) {
 
-	query := s.client.Domain + apiBimModels + "/" + strconv.FormatUint(id, 10)
+	query := s.resourceURL + apiBimModels + "/" + strconv.FormatUint(id, 10)
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &BimModel{}, &SpatialStructure{}, HTTPStatus{code, err.Error()}

@@ -1,4 +1,6 @@
-package rest
+// Copyright 2019 Robotic Eyes. All rights reserved.
+
+package core
 
 import (
 	b64 "encoding/base64"
@@ -16,10 +18,11 @@ const (
 )
 
 // Authenticate gets a valid token for the given user credentials
-// and returns the plain token information (without the authentication key bearer!)
+// and returns the plain token information (without the authentication key bearer!).
+// The domain denotes the rexOS base URL (e.g. <scheme>://<host>)
 func Authenticate(domain, clientID, clientSecret string) (string, error) {
 
-	client := NewRestClient(domain)
+	client := NewClient()
 	req, err := http.NewRequest("POST", domain+apiToken, strings.NewReader("grant_type=client_credentials"))
 	if err != nil {
 		return "", err

@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rest
+package core
 
 import (
 	"context"
@@ -26,12 +26,16 @@ type UserService interface {
 }
 
 type userService struct {
-	client *Client
+	resourceURL string // defines the URL for accessing the project resource (<schema>://<host>)
+	client      *Client
 }
 
 // NewUserService creates a new project userService
-func NewUserService(client *Client) UserService {
-	return &userService{client}
+func NewUserService(client *Client, resourceURL string) UserService {
+	return &userService{
+		client:      client,
+		resourceURL: resourceURL,
+	}
 }
 
 // GetCurrentUser gets the user details of the current user.
@@ -39,7 +43,7 @@ func NewUserService(client *Client) UserService {
 // The current user is the one which has been identified by the authentication token.
 func (s *userService) GetCurrentUser(ctx context.Context) (*User, HTTPStatus) {
 
-	query := s.client.Domain + apiCurrentUser
+	query := s.resourceURL + apiCurrentUser
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &User{}, HTTPStatus{code, err.Error()}
@@ -58,7 +62,7 @@ func (s *userService) GetCurrentUser(ctx context.Context) (*User, HTTPStatus) {
 // Requires admin permissions!
 func (s *userService) GetTotalNumberOfUsers(ctx context.Context) (uint64, HTTPStatus) {
 
-	query := s.client.Domain + apiUsers
+	query := s.resourceURL + apiUsers
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return 0, HTTPStatus{500, err.Error()}
@@ -70,7 +74,7 @@ func (s *userService) GetTotalNumberOfUsers(ctx context.Context) (uint64, HTTPSt
 // Requires admin permissions!
 func (s *userService) FindUserByUserID(ctx context.Context, userID string) (*User, HTTPStatus) {
 
-	query := s.client.Domain + apiFindByID + userID
+	query := s.resourceURL + apiFindByID + userID
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &User{}, HTTPStatus{500, err.Error()}
@@ -84,7 +88,7 @@ func (s *userService) FindUserByUserID(ctx context.Context, userID string) (*Use
 // FindUserByEmail retrieves the user ID of a given email address
 func (s *userService) FindUserByEmail(ctx context.Context, email string) (*User, HTTPStatus) {
 
-	query := s.client.Domain + apiFindByEmail + email
+	query := s.resourceURL + apiFindByEmail + email
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &User{}, HTTPStatus{code, err.Error()}

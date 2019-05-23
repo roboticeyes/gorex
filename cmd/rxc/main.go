@@ -16,7 +16,7 @@ import (
 	"text/scanner"
 
 	"github.com/breiting/socketcluster-client-go/scclient"
-	rexos "github.com/roboticeyes/gorex/http/rexos/rest"
+	rexos "github.com/roboticeyes/gorex/http/core"
 )
 
 // the help text that gets displayed when something goes wrong or when you run
@@ -139,9 +139,9 @@ func authenticate() {
 }
 
 func listProjects() {
-	client := rexos.NewRestClient(apiURL)
-	projectService := rexos.NewProjectService(client)
-	userService := rexos.NewUserService(client)
+	client := rexos.NewClient()
+	projectService := rexos.NewProjectService(client, apiURL)
+	userService := rexos.NewUserService(client, apiURL)
 	rexUser, status := userService.GetCurrentUser(ctx)
 	if status.Code != http.StatusOK {
 		fmt.Println(status)
@@ -161,9 +161,9 @@ func listProjects() {
 }
 
 func listProject(projectName string) {
-	client := rexos.NewRestClient(apiURL)
-	projectService := rexos.NewProjectService(client)
-	userService := rexos.NewUserService(client)
+	client := rexos.NewClient()
+	projectService := rexos.NewProjectService(client, apiURL)
+	userService := rexos.NewUserService(client, apiURL)
 	rexUser, status := userService.GetCurrentUser(ctx)
 	project, status := projectService.FindByNameAndOwner(ctx, projectName, rexUser.UserID)
 
@@ -176,7 +176,7 @@ func listProject(projectName string) {
 
 // WIP currently not exposed, just for testing
 func bimModel(modelID string) {
-	bimModelService := rexos.NewBimModelService(rexClient)
+	bimModelService := rexos.NewBimModelService(rexClient, apiURL)
 	id, err := strconv.ParseUint(modelID, 10, 64)
 	if err != nil {
 		id = 1000
@@ -245,9 +245,9 @@ func listenProject(projectName string) {
 	var reader scanner.Scanner
 	var err error
 
-	restClient := rexos.NewRestClient(apiURL)
-	projectService := rexos.NewProjectService(restClient)
-	userService := rexos.NewUserService(restClient)
+	restClient := rexos.NewClient()
+	projectService := rexos.NewProjectService(restClient, apiURL)
+	userService := rexos.NewUserService(restClient, apiURL)
 	rexUser, status := userService.GetCurrentUser(ctx)
 	if status.Code != http.StatusOK {
 		fmt.Println(status)

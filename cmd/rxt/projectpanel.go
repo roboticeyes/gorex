@@ -5,7 +5,7 @@ import (
 
 	"github.com/breiting/tview"
 	"github.com/gdamore/tcell"
-	"github.com/roboticeyes/gorex/http/rexos/listing"
+	"github.com/roboticeyes/gorex/http/creator/listing"
 )
 
 // ProjectPanel shows a table of rexOS projects

@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rest
+package core
 
 import (
 	"bytes"
@@ -35,18 +35,22 @@ type ProjectService interface {
 }
 
 type projectService struct {
-	client *Client
+	resourceURL string // defines the URL for accessing the project resource (<schema>://<host>)
+	client      *Client
 }
 
 // NewProjectService creates a new project projectService
-func NewProjectService(client *Client) ProjectService {
-	return &projectService{client}
+func NewProjectService(client *Client, resourceURL string) ProjectService {
+	return &projectService{
+		client:      client,
+		resourceURL: resourceURL,
+	}
 }
 
 // FindByNameAndOwner returns the unique identified project by userId and project name
 func (s *projectService) FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus) {
 
-	query := s.client.Domain + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
+	query := s.resourceURL + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &Project{}, HTTPStatus{500, err.Error()}
@@ -58,7 +62,7 @@ func (s *projectService) FindByNameAndOwner(ctx context.Context, name, owner str
 }
 
 func (s *projectService) FindAllByUser(ctx context.Context, user string) (*ProjectDetailedList, HTTPStatus) {
-	query := s.client.Domain + apiProjectAllByUser + user
+	query := s.resourceURL + apiProjectAllByUser + user
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
 		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
@@ -140,7 +144,7 @@ func (s *projectService) UploadProjectFile(ctx context.Context, project Project,
 
 	// Create project file
 	json.NewEncoder(b).Encode(projectFile)
-	body, code, err := s.client.Post(ctx, s.client.Domain+apiProjectFiles, b, "application/json")
+	body, code, err := s.client.Post(ctx, s.resourceURL+apiProjectFiles, b, "application/json")
 	if err != nil {
 		return HTTPStatus{code, err.Error()}
 	}
@@ -167,7 +171,7 @@ func (s *projectService) createRexReference(ctx context.Context, r *RexReference
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
 
-	body, code, err := s.client.Post(ctx, s.client.Domain+apiRexReferences, b, "application/json")
+	body, code, err := s.client.Post(ctx, s.resourceURL+apiRexReferences, b, "application/json")
 
 	if err != nil {
 		return "", HTTPStatus{500, err.Error()}

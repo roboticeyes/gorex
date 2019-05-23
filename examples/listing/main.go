@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/roboticeyes/gorex/http/rexos"
+	"github.com/roboticeyes/gorex/http/creator"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 
 func main() {
 
-	controller := rexos.NewController(rexDomain)
+	controller := creator.NewController(rexDomain)
 
 	// Authenticate
 	err := controller.Authenticate(clientID, clientSecret)

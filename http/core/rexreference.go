@@ -1,6 +1,6 @@
 // Copyright 2019 Robotic Eyes. All rights reserved.
 
-package rest
+package core
 
 // RexReference is a spatial anchor which can be attached to a project or a project file.
 type RexReference struct {

@@ -1,4 +1,4 @@
-package rest
+package core
 
 import (
 	"context"
@@ -22,15 +22,13 @@ const (
 // Client is the client which is used to send requests to the rexOS. The client
 // should be created once and shared among all services.
 type Client struct {
-	Domain     string
 	httpClient *http.Client
 }
 
-// NewRestClient create a new rexOS HTTP client
-func NewRestClient(domain string) *Client {
+// NewClient create a new rexOS HTTP client
+func NewClient() *Client {
 
 	return &Client{
-		Domain:     domain,
 		httpClient: http.DefaultClient,
 	}
 }

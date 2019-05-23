@@ -1,44 +1,39 @@
-package rest
+package core
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/roboticeyes/gorex/http/rexos/listing"
+	"github.com/roboticeyes/gorex/http/creator/listing"
 )
 
-// DataProviderRest provides the data from the rexOS data interface.
-type DataProviderRest struct {
+// Controller implements all interfaces which are required
+// to work with the high-level API. It handles all the access to
+// the rexOS world.
+type Controller struct {
+	config         RexConfig
 	client         *Client
 	rexUser        *User
 	projectService ProjectService
 	userService    UserService
 }
 
-// NewDataProvider returns a new instance of the rexOS data rest interface
-func NewDataProvider(domain string) *DataProviderRest {
-	var d DataProviderRest
-	d.client = NewRestClient(domain)
-	d.projectService = NewProjectService(d.client)
-	d.userService = NewUserService(d.client)
-	return &d
-}
-
-// GetUser fetches the user information and stores it in the data provider.
-func (d *DataProviderRest) GetUser(ctx context.Context) (*User, error) {
-	var status HTTPStatus
-	d.rexUser, status = d.userService.GetCurrentUser(ctx)
-	if status.Code != http.StatusOK {
-		return nil, status
+// NewController returns a new instance of the rexOS data rest interface
+func NewController(config RexConfig) *Controller {
+	client := NewClient()
+	return &Controller{
+		config:         config,
+		client:         client,
+		projectService: NewProjectService(client, config.ProjectResourceURL),
+		userService:    NewUserService(client, config.UserResourceURL),
 	}
-	return d.rexUser, nil
 }
 
 // GetProjects fetches the projects and returns a list of projects
-func (d *DataProviderRest) GetProjects(ctx context.Context) ([]listing.Project, error) {
+func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error) {
 
 	if d.rexUser == nil {
-		_, err := d.GetUser(ctx)
+		_, err := d.getUser(ctx)
 		if err != nil {
 			return []listing.Project{}, err
 		}
@@ -63,8 +58,8 @@ func (d *DataProviderRest) GetProjects(ctx context.Context) ([]listing.Project, 
 	return result, nil
 }
 
-// GetUserInformation delivers information about the authenticated user
-func (d *DataProviderRest) GetUserInformation(ctx context.Context) (listing.User, error) {
+// GetUser delivers information about the authenticated user
+func (d *Controller) GetUser(ctx context.Context) (listing.User, error) {
 
 	if d.rexUser == nil {
 		_, err := d.GetUser(ctx)
@@ -80,4 +75,13 @@ func (d *DataProviderRest) GetUserInformation(ctx context.Context) (listing.User
 		FirstName: d.rexUser.FirstName,
 		LastName:  d.rexUser.LastName,
 	}, nil
+}
+
+func (d *Controller) getUser(ctx context.Context) (*User, error) {
+	var status HTTPStatus
+	d.rexUser, status = d.userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		return nil, status
+	}
+	return d.rexUser, nil
 }

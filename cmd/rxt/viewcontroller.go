@@ -1,31 +1,33 @@
 package main
 
 import (
-	"github.com/roboticeyes/gorex/http/rexos"
-	"github.com/roboticeyes/gorex/http/rexos/listing"
+	"github.com/roboticeyes/gorex/http/creator"
+	"github.com/roboticeyes/gorex/http/creator/listing"
 )
 
 // ViewController handles all requests to the rexOS interface
 type ViewController struct {
-	config        *Configuration
-	rexController rexos.Controller
+	config     *Configuration
+	controller *creator.Controller
+	user       listing.User // cached user information
 }
 
 // NewViewController creates new view controller
 func NewViewController(config *Configuration) *ViewController {
 	return &ViewController{
-		config:        config,
-		rexController: rexos.NewController(config.APIUrl),
+		config:     config,
+		controller: creator.NewController(config.Active.Domain),
 	}
 }
 
 // Connect to rexOS
 func (c *ViewController) Connect() (string, error) {
-	err := c.rexController.Authenticate(c.config.Active.ClientID, c.config.Active.ClientSecret)
+	err := c.controller.Authenticate(c.config.Active.ClientID, c.config.Active.ClientSecret)
 	if err != nil {
 		return "", err
 	}
-	return c.rexController.GetUserInformation().Username, nil
+	c.user = c.controller.GetUser()
+	return c.user.Username, nil
 }
 
 // GetConfiguration gets the configuration
@@ -35,17 +37,17 @@ func (c *ViewController) GetConfiguration() *Configuration {
 
 // GetUserName returns the user name of the authenticated user
 func (c *ViewController) GetUserName() string {
-	return c.rexController.GetUserInformation().Username
+	return c.user.Username
 }
 
 // GetUserID returns the user ID of the authenticated user
 func (c *ViewController) GetUserID() string {
-	return c.rexController.GetUserInformation().UserID
+	return c.user.UserID
 }
 
 // GetProjects delivers a list of all projects related to the user
 func (c *ViewController) GetProjects() ([]listing.Project, error) {
-	return c.rexController.GetProjects()
+	return c.controller.GetProjects()
 }
 
 // GetProjectFiles delivers the list of project files for a given project
