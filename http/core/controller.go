@@ -16,7 +16,6 @@ import (
 type Controller struct {
 	config         RexConfig
 	client         *Client
-	rexUser        *User
 	projectService ProjectService
 	userService    UserService
 }
@@ -51,13 +50,12 @@ func NewController(config RexConfig) *Controller {
 // GetProjects fetches the projects and returns a list of projects
 func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error) {
 
-	if d.rexUser == nil {
-		_, err := d.getUser(ctx)
-		if err != nil {
-			return []listing.Project{}, err
-		}
+	userID, err := GetUserIDFromContext(ctx)
+	if err != nil {
+		return []listing.Project{}, fmt.Errorf("Missing UserID in context")
 	}
-	projects, status := d.projectService.FindAllByUser(ctx, d.rexUser.UserID)
+
+	projects, status := d.projectService.FindAllByUser(ctx, userID)
 	if status.Code != http.StatusOK {
 		return []listing.Project{}, status
 	}
@@ -81,40 +79,28 @@ func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error)
 // GetUser delivers information about the authenticated user
 func (d *Controller) GetUser(ctx context.Context) (listing.User, error) {
 
-	if d.rexUser == nil {
-		_, err := d.getUser(ctx)
-		if err != nil {
-			return listing.User{}, err
-		}
+	rexUser, status := d.userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		return listing.User{}, fmt.Errorf("Cannot get user information")
 	}
 
 	return listing.User{
-		UserID:    d.rexUser.UserID,
-		Username:  d.rexUser.Username,
-		Email:     d.rexUser.Email,
-		FirstName: d.rexUser.FirstName,
-		LastName:  d.rexUser.LastName,
+		UserID:    rexUser.UserID,
+		Username:  rexUser.Username,
+		Email:     rexUser.Email,
+		FirstName: rexUser.FirstName,
+		LastName:  rexUser.LastName,
 	}, nil
-}
-
-func (d *Controller) getUser(ctx context.Context) (*User, error) {
-	var status HTTPStatus
-	d.rexUser, status = d.userService.GetCurrentUser(ctx)
-	if status.Code != http.StatusOK {
-		return nil, status
-	}
-	return d.rexUser, nil
 }
 
 // CreateProject create a new project with the according rex reference
 func (d *Controller) CreateProject(ctx context.Context, name string) (*adding.Project, error) {
-	if d.rexUser == nil {
-		_, err := d.getUser(ctx)
-		if err != nil {
-			return nil, err
-		}
+
+	userID, err := GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Missing UserID in context")
 	}
-	p, status := d.projectService.CreateProject(ctx, name, d.rexUser.UserID)
+	p, status := d.projectService.CreateProject(ctx, name, userID)
 	if status.Code != http.StatusCreated {
 		return nil, status
 	}

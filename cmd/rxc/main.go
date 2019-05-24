@@ -133,9 +133,21 @@ func authenticate() {
 		}
 	}
 
-	token = string(buf)
-	ctx = context.Background()
-	ctx = context.WithValue(ctx, rexos.AccessTokenKey, token)
+	// Setup proper context
+	var contextData rexos.ContextData
+	contextData.AccessToken = string(buf)
+	ctx = context.WithValue(context.Background(), rexos.ContextDataKey, contextData)
+	// Get user
+	client := rexos.NewClient()
+	userService := rexos.NewUserService(client, apiURL)
+	rexUser, status := userService.GetCurrentUser(ctx)
+	if status.Code != http.StatusOK {
+		fmt.Println(status)
+		panic("error getting user")
+	}
+	contextData.UserID = rexUser.UserID
+	// Update context
+	ctx = context.WithValue(context.Background(), rexos.ContextDataKey, contextData)
 }
 
 func listProjects() {

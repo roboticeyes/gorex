@@ -58,8 +58,10 @@ func (c *Controller) Authenticate(clientID, clientSecret string) error {
 		return err
 	}
 
-	// update context with token
-	c.ctx = context.WithValue(c.ctx, core.AccessTokenKey, token)
+	// Create a context with access token to get user information
+	var contextData core.ContextData
+	contextData.AccessToken = token
+	c.ctx = context.WithValue(c.ctx, core.ContextDataKey, contextData)
 
 	// Get all services
 	rexAccessor := core.NewController(c.config)
@@ -71,6 +73,10 @@ func (c *Controller) Authenticate(clientID, clientSecret string) error {
 	if err != nil {
 		return err
 	}
+
+	// Set a fresh context with accesstoken and user id
+	contextData.UserID = c.user.UserID
+	c.ctx = context.WithValue(context.Background(), core.ContextDataKey, contextData)
 
 	return nil
 }
