@@ -13,10 +13,16 @@ import (
 // AccessTokenType is used for the key of the authorization token for the context
 type AccessTokenType string
 
+// UserIDType is used for the key of the user_id in the context
+type UserIDType string
+
 const (
 	// AccessTokenKey is the key for the context information. The context needs to store the
 	// full access token with "bearer <token>"
 	AccessTokenKey AccessTokenType = "authorization"
+	// UserIDKey is the key for the context information. The context needs to store the
+	// rexOS user id
+	UserIDKey UserIDType = "UserID"
 )
 
 // Client is the client which is used to send requests to the rexOS. The client
@@ -39,10 +45,8 @@ func NewClient() *Client {
 // the given context.
 func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 
-	authKey := ctx.Value(AccessTokenKey)
-
-	if authKey == nil {
-		log.Error("Missing token in context")
+	authKey, err := GetAccessTokenFromContext(ctx)
+	if err != nil {
 		return nil, http.StatusForbidden, fmt.Errorf("Missing token in context")
 	}
 
@@ -50,7 +54,7 @@ func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("authorization", authKey.(string))
+	req.Header.Add("authorization", authKey)
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
@@ -71,10 +75,8 @@ func (c *Client) Get(ctx context.Context, query string) ([]byte, int, error) {
 // binary data upload.
 func (c *Client) Post(ctx context.Context, query string, payload io.Reader, contentType string) ([]byte, int, error) {
 
-	authKey := ctx.Value(AccessTokenKey)
-
-	if authKey == nil {
-		log.Error("Missing token in context")
+	authKey, err := GetAccessTokenFromContext(ctx)
+	if err != nil {
 		return nil, http.StatusForbidden, fmt.Errorf("Missing token in context")
 	}
 
@@ -82,7 +84,7 @@ func (c *Client) Post(ctx context.Context, query string, payload io.Reader, cont
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
-	req.Header.Add("authorization", authKey.(string))
+	req.Header.Add("authorization", authKey)
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
