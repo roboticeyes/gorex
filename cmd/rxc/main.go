@@ -107,7 +107,7 @@ func printSettings() {
 func login() {
 	fmt.Println("Logging into rexOS ...")
 
-	token, err := rexos.Authenticate(apiURL, clientID, clientSecret)
+	token, err := rexos.Authenticate(domain, clientID, clientSecret)
 	if err != nil {
 		log.Fatal("Error during connection", err)
 	}
