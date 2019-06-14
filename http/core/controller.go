@@ -64,7 +64,6 @@ func (d *Controller) GetProjects(ctx context.Context) ([]listing.Project, error)
 	var result []listing.Project
 	for _, p := range projects.Embedded.Projects {
 		result = append(result, listing.Project{
-			SelfLink:             p.Links.Self.Href,
 			Urn:                  p.Urn,
 			Name:                 p.Name,
 			Owner:                p.Owner,

@@ -2,7 +2,6 @@ package listing
 
 // Project contains the top level information for a creator project
 type Project struct {
-	SelfLink             string
 	Urn                  string
 	Name                 string
 	Owner                string
