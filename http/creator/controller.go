@@ -9,6 +9,7 @@ package creator
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	"github.com/roboticeyes/gorex/http/core"
@@ -82,9 +83,13 @@ func (c *Controller) Authenticate(clientID, clientSecret string) error {
 }
 
 // GetProjects returns all projects of the user
-func (c *Controller) GetProjects() ([]listing.Project, error) {
+func (c *Controller) GetProjects(size, page uint64) ([]listing.Project, error) {
 	c.wg.Wait()
-	return c.listing.GetProjects(c.ctx)
+	res, ret := c.listing.GetProjects(c.ctx, size, page)
+	if ret.Code != http.StatusOK {
+		return res, ret
+	}
+	return res, nil
 }
 
 // GetUser returns the user information

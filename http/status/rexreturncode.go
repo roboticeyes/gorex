@@ -19,3 +19,11 @@ func (h RexReturnCode) Error() string {
 	}
 	return http.StatusText(h.Code)
 }
+
+// RexReturnCodeOk can be used for 200 returns and no errors
+func RexReturnCodeOk() RexReturnCode {
+	return RexReturnCode{
+		Code:    http.StatusOK,
+		Message: "",
+	}
+}

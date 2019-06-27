@@ -159,7 +159,7 @@ func listProjects() {
 		fmt.Println(status)
 		panic("error getting user")
 	}
-	projects, status := projectService.FindAllByUser(ctx, rexUser.UserID)
+	projects, status := projectService.FindAllByUser(ctx, rexUser.UserID, 100, 0)
 
 	if status.Code != http.StatusOK {
 		fmt.Println("Cannot get project", status)

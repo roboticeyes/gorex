@@ -28,8 +28,8 @@ func main() {
 	// Print user information
 	fmt.Println(controller.GetUser())
 
-	// Get projects
-	projects, err := controller.GetProjects()
+	// Get the first 10 projects
+	projects, err := controller.GetProjects(10, 0)
 	if err != nil {
 		fmt.Println("Cannot get project list: ", err)
 	}
