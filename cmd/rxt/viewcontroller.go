@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/roboticeyes/gorex/http/creator"
 	"github.com/roboticeyes/gorex/http/creator/listing"
 )
