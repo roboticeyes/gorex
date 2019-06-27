@@ -8,6 +8,7 @@ import (
 
 	"github.com/roboticeyes/gorex/http/creator/adding"
 	"github.com/roboticeyes/gorex/http/creator/listing"
+	"github.com/roboticeyes/gorex/http/status"
 )
 
 // Controller implements all interfaces which are required
@@ -22,18 +23,18 @@ type Controller struct {
 
 // ProjectService provides the calls for accessing REX project(s)
 type ProjectService interface {
-	FindAllByUser(ctx context.Context, owner string) (*ProjectDetailedList, HTTPStatus)
-	FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus)
-	CreateProject(ctx context.Context, name, owner string) (*Project, HTTPStatus)
-	UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus
+	FindAllByUser(ctx context.Context, owner string) (*ProjectDetailedList, status.RexReturnCode)
+	FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, status.RexReturnCode)
+	CreateProject(ctx context.Context, name, owner string) (*Project, status.RexReturnCode)
+	UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) status.RexReturnCode
 }
 
 // UserService provides the calls for accessing REX user resource
 type UserService interface {
-	GetCurrentUser(ctx context.Context) (*User, HTTPStatus)
-	GetTotalNumberOfUsers(ctx context.Context) (uint64, HTTPStatus)
-	FindUserByEmail(ctx context.Context, email string) (*User, HTTPStatus)
-	FindUserByUserID(ctx context.Context, userID string) (*User, HTTPStatus)
+	GetCurrentUser(ctx context.Context) (*User, status.RexReturnCode)
+	GetTotalNumberOfUsers(ctx context.Context) (uint64, status.RexReturnCode)
+	FindUserByEmail(ctx context.Context, email string) (*User, status.RexReturnCode)
+	FindUserByUserID(ctx context.Context, userID string) (*User, status.RexReturnCode)
 }
 
 // NewController returns a new instance of the rexOS data rest interface
