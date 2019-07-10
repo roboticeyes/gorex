@@ -8,7 +8,7 @@
 
 # IMPORTANT
 
-The gorex library is currently under heavy development. Please keep in mind that interfaces may change, and code gets refactored. If you want to use gorex in your production code, please contact support@robotic-eyes.com.
+The gorex REST client implementation is currently under heavy development. Please keep in mind that interfaces may change, and code gets refactored. If you want to use gorex in your production code, please contact support@robotic-eyes.com.
 
 # gorex
 
