@@ -35,6 +35,9 @@ type UserService interface {
 	GetTotalNumberOfUsers(ctx context.Context) (uint64, status.RexReturnCode)
 	FindUserByEmail(ctx context.Context, email string) (*User, status.RexReturnCode)
 	FindUserByUserID(ctx context.Context, userID string) (*User, status.RexReturnCode)
+	FindUserBySelfLink(ctx context.Context, selfLink string) (*User, status.RexReturnCode)
+	FindAllUsers(ctx context.Context, size, page uint64) ([]UserDetails, status.RexReturnCode)
+	DeleteUser(ctx context.Context, selfLink string) status.RexReturnCode
 }
 
 // NewController returns a new instance of the rexOS data rest interface
