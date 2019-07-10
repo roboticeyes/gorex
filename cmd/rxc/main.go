@@ -371,7 +371,7 @@ func handleUsers(cmd string) {
 
 func parseRexDate(input string) string {
 	if input == "" {
-		return "not set"
+		return "never"
 	}
 	var y, m, d, H, M int
 	_, err := fmt.Sscanf(input, "%4d-%2d-%2dT%2d:%2d", &y, &m, &d, &H, &M)
