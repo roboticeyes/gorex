@@ -6,6 +6,10 @@
   <img style="float: right;" src="assets/rex-go.png" alt="goREX logo"/>
 </p>
 
+# IMPORTANT
+
+The gorex library is currently under heavy development. Please keep in mind that interfaces may change, and code gets refactored. If you want to use gorex in your production code, please contact support@robotic-eyes.com.
+
 # gorex
 
 The `gorex` library provides a library which works with [rexOS](https://www.rexos.org). The library can
