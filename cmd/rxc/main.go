@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -35,10 +36,15 @@ actions:
   rxc ls "project name"     show details for a given project
   rxc listen "project name" listens to project change notifications
   rxc bim 1000              retrieve the bim model with ID 1000
+  rxc users total           get number of total users
+  rxc users ls              get all registered users
+  rxc users show self_link  shows the details of the user by the given self link
+  rxc users rm self_link    remove a certain user with the given self link
 `
 
 const (
 	tokenFile = "accesstoken"
+	pageSize  = 20
 )
 
 var (
@@ -159,7 +165,7 @@ func listProjects() {
 		fmt.Println(status)
 		panic("error getting user")
 	}
-	projects, status := projectService.FindAllByUser(ctx, rexUser.UserID)
+	projects, status := projectService.FindAllByUser(ctx, rexUser.UserID, 100, 0)
 
 	if status.Code != http.StatusOK {
 		fmt.Println("Cannot get project", status)
@@ -287,6 +293,94 @@ func listenProject(projectName string) {
 	reader.Next()
 }
 
+func handleUsers(cmd string) {
+	client := rexos.NewClient()
+	userService := rexos.NewUserService(client, apiURL)
+
+	// only admin are allowed to play around with users endpoint
+	number, status := userService.GetTotalNumberOfUsers(ctx)
+	if status.Code != http.StatusOK {
+		fmt.Println(status)
+		panic("error getting information")
+	}
+
+	switch cmd {
+	case "total":
+		fmt.Println("Total number of users:", number)
+	case "show":
+		if len(os.Args) < 4 {
+			fmt.Println("Please specify a user self_link")
+			os.Exit(1)
+		}
+		user, status := userService.FindUserBySelfLink(ctx, os.Args[3])
+		if status.Code != http.StatusOK {
+			panic(status)
+		}
+		fmt.Println(user)
+	case "rm":
+		if len(os.Args) < 4 {
+			fmt.Println("Please specify a user self_link")
+			os.Exit(1)
+		}
+		user, status := userService.FindUserBySelfLink(ctx, os.Args[3])
+		if status.Code != http.StatusOK {
+			panic(status)
+		}
+		fmt.Println(user)
+
+		// let confirm
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Do you really want to delete this user? (y/n): ")
+		text, _ := reader.ReadString('\n')
+		text = strings.Replace(text, "\n", "", -1)
+		if strings.Compare("y", text) == 0 {
+			status := userService.DeleteUser(ctx, os.Args[3])
+			if status.Code != http.StatusOK {
+				fmt.Println(status)
+				panic("error deleting information")
+			}
+			fmt.Println("Successfully deleted: ", os.Args[3])
+		}
+	case "ls":
+		var users []rexos.UserDetails
+		page := 0
+		for {
+			batch, status := userService.FindAllUsers(ctx, uint64(pageSize), uint64(page))
+			if status.Code != http.StatusOK {
+				panic(status)
+			}
+			// exit criteria
+			if len(batch) == 0 {
+				break
+			}
+			users = append(users, batch...)
+			page++
+		}
+
+		// print result
+		formatString := "%-16s %-16s %-50s %-20s %-20s %s\n"
+		fmt.Printf(formatString, "FIRSTNAME", "LASTNAME", "USERNAME", "DATE CREATED", "LAST LOGIN", "SELF LINK")
+		for _, u := range users {
+			fmt.Printf(
+				formatString,
+				u.FirstName, u.LastName, u.Username,
+				parseRexDate(u.DateCreated), parseRexDate(u.LastLogin), u.Links.Self.Href)
+		}
+	}
+}
+
+func parseRexDate(input string) string {
+	if input == "" {
+		return "never"
+	}
+	var y, m, d, H, M int
+	_, err := fmt.Sscanf(input, "%4d-%2d-%2dT%2d:%2d", &y, &m, &d, &H, &M)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d", y, m, d, H, M)
+}
+
 func main() {
 	if len(os.Args) == 1 {
 		help(0)
@@ -305,6 +399,9 @@ func main() {
 	case "bim":
 		authenticate()
 		bimModel(os.Args[2])
+	case "users":
+		authenticate()
+		handleUsers(os.Args[2])
 	case "ls":
 		switch commandArgs {
 		case 0:

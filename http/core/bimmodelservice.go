@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+
+	"github.com/roboticeyes/gorex/http/status"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
 
 // BimModelService provides the calls for accessing REX models
 type BimModelService interface {
-	GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, HTTPStatus)
+	GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, status.RexReturnCode)
 }
 
 type bimModelService struct {
@@ -31,12 +33,12 @@ func NewBimModelService(client *Client, resourceURL string) BimModelService {
 }
 
 // GetBimModelByID returns a valid BIM model by the given ID
-func (s *bimModelService) GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, HTTPStatus) {
+func (s *bimModelService) GetBimModelByID(ctx context.Context, id uint64) (*BimModel, *SpatialStructure, status.RexReturnCode) {
 
 	query := s.resourceURL + apiBimModels + "/" + strconv.FormatUint(id, 10)
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
-		return &BimModel{}, &SpatialStructure{}, HTTPStatus{code, err.Error()}
+		return &BimModel{}, &SpatialStructure{}, status.RexReturnCode{code, err.Error()}
 	}
 
 	var bimModel BimModel
@@ -46,14 +48,14 @@ func (s *bimModelService) GetBimModelByID(ctx context.Context, id uint64) (*BimM
 	return &bimModel, spatial, status
 }
 
-func (s *bimModelService) getSpatialStructure(ctx context.Context, url string) (*SpatialStructure, HTTPStatus) {
+func (s *bimModelService) getSpatialStructure(ctx context.Context, url string) (*SpatialStructure, status.RexReturnCode) {
 
 	body, code, err := s.client.Get(ctx, url)
 	if err != nil {
-		return &SpatialStructure{}, HTTPStatus{500, err.Error()}
+		return &SpatialStructure{}, status.RexReturnCode{500, err.Error()}
 	}
 
 	var spatial SpatialStructure
 	err = json.Unmarshal(body, &spatial)
-	return &spatial, HTTPStatus{Code: code}
+	return &spatial, status.RexReturnCode{Code: code}
 }

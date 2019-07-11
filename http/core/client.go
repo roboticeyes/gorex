@@ -99,3 +99,29 @@ func (c *Client) Post(ctx context.Context, query string, payload io.Reader, cont
 	body, err := ioutil.ReadAll(resp.Body)
 	return body, resp.StatusCode, err
 }
+
+// Delete sends a DELETE request to the given link.
+func (c *Client) Delete(ctx context.Context, link string) error {
+
+	authKey, err := GetAccessTokenFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("Missing token in context")
+	}
+
+	req, _ := http.NewRequest("DELETE", link, nil)
+	req.Header.Add("X-Requested-With", "XMLHttpRequest")
+	req.Header.Add("authorization", authKey)
+	resp, err := c.httpClient.Do(req)
+
+	if err != nil {
+		log.Error("POST request error:", err)
+		return err
+	}
+	// this is required to properly empty the buffer for the next call
+	defer func() {
+		io.Copy(ioutil.Discard, resp.Body)
+	}()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	return err
+}

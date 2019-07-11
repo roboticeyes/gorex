@@ -18,6 +18,7 @@ type User struct {
 	Email     string `json:"email,omitempty"`
 	FirstName string `json:"firstName,omitempty"`
 	LastName  string `json:"lastName,omitempty"`
+	LastLogin string `json:"lastLogin,omitempty"`
 	SelfLink  string
 	Roles     []string `json:"roles,omitempty"`
 	Links     struct {
@@ -25,6 +26,57 @@ type User struct {
 			Href string `json:"href"`
 		} `json:"user"`
 	} `json:"_links,omitempty"`
+}
+
+// UserDetails is the full structure of a user for the /users endpoint
+type UserDetails struct {
+	DateCreated               string   `json:"dateCreated"`
+	CreatedBy                 string   `json:"createdBy"`
+	LastUpdated               string   `json:"lastUpdated"`
+	UpdatedBy                 string   `json:"updatedBy"`
+	UserID                    string   `json:"userId"`
+	Username                  string   `json:"username"`
+	Email                     string   `json:"email"`
+	FirstName                 string   `json:"firstName"`
+	LastName                  string   `json:"lastName"`
+	ExpirationDate            string   `json:"expirationDate"`
+	Locked                    bool     `json:"locked"`
+	Disabled                  bool     `json:"disabled"`
+	CredentialsExpirationDate string   `json:"credentialsExpirationDate"`
+	LastLogin                 string   `json:"lastLogin"`
+	InvitedBy                 string   `json:"invitedBy"`
+	PlaintextPassword         string   `json:"plaintextPassword"`
+	Roles                     []string `json:"roles"`
+	Links                     struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+		User struct {
+			Href string `json:"href"`
+		} `json:"user"`
+		UserDescription struct {
+			Href string `json:"href"`
+		} `json:"userDescription"`
+		Clients struct {
+			Href string `json:"href"`
+		} `json:"clients"`
+		UserLicenses struct {
+			Href string `json:"href"`
+		} `json:"userLicenses"`
+		UserConnections struct {
+			Href string `json:"href"`
+		} `json:"userConnections"`
+		UserPaymentConnections struct {
+			Href string `json:"href"`
+		} `json:"userPaymentConnections"`
+	} `json:"_links"`
+}
+
+// UserList is a list of users delivered by the rexos /users endpoint
+type UserList struct {
+	Embedded struct {
+		Users []UserDetails `json:"users"`
+	} `json:"_embedded"`
 }
 
 // String nicely prints out the user information.

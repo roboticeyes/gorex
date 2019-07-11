@@ -47,7 +47,7 @@ func (c *ViewController) GetUserID() string {
 
 // GetProjects delivers a list of all projects related to the user
 func (c *ViewController) GetProjects() ([]listing.Project, error) {
-	return c.controller.GetProjects()
+	return c.controller.GetProjects(100, 0)
 }
 
 // GetProjectFiles delivers the list of project files for a given project

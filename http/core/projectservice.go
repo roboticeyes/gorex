@@ -12,8 +12,10 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/roboticeyes/gorex/http/status"
 	"github.com/tidwall/gjson"
 )
 
@@ -40,33 +42,33 @@ func NewProjectService(client *Client, resourceURL string) ProjectService {
 }
 
 // FindByNameAndOwner returns the unique identified project by userId and project name
-func (s *projectService) FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, HTTPStatus) {
+func (s *projectService) FindByNameAndOwner(ctx context.Context, name, owner string) (*Project, status.RexReturnCode) {
 
 	query := s.resourceURL + apiProjectByNameAndOwner + "name=" + url.PathEscape(name) + "&owner=" + owner
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
-		return &Project{}, HTTPStatus{500, err.Error()}
+		return &Project{}, status.RexReturnCode{Code: 500, Message: err.Error()}
 	}
 
 	var project Project
 	err = json.Unmarshal(body, &project)
-	return &project, HTTPStatus{Code: code}
+	return &project, status.RexReturnCode{Code: code}
 }
 
-func (s *projectService) FindAllByUser(ctx context.Context, user string) (*ProjectDetailedList, HTTPStatus) {
-	query := s.resourceURL + apiProjectAllByUser + user
+func (s *projectService) FindAllByUser(ctx context.Context, user string, size, page uint64) (*ProjectDetailedList, status.RexReturnCode) {
+	query := s.resourceURL + apiProjectAllByUser + user + "&size=" + strconv.FormatUint(size, 10) + "&page=" + strconv.FormatUint(page, 10)
 	body, code, err := s.client.Get(ctx, query)
 	if err != nil {
-		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
+		return &ProjectDetailedList{}, status.RexReturnCode{Code: 500, Message: err.Error()}
 	}
 	if code != http.StatusOK {
-		return &ProjectDetailedList{}, HTTPStatus{Code: code}
+		return &ProjectDetailedList{}, status.RexReturnCode{Code: code}
 	}
 
 	var projects ProjectDetailedList
 	err = json.Unmarshal(body, &projects)
 	if err != nil {
-		return &ProjectDetailedList{}, HTTPStatus{500, err.Error()}
+		return &ProjectDetailedList{}, status.RexReturnCode{Code: 500, Message: err.Error()}
 	}
 
 	// set Urn with legacy ID if not retrieved from backend
@@ -77,14 +79,14 @@ func (s *projectService) FindAllByUser(ctx context.Context, user string) (*Proje
 			projects.Embedded.Projects[i].Urn = values[1]
 		}
 	}
-	return &projects, HTTPStatus{Code: code}
+	return &projects, status.RexReturnCode{Code: code}
 }
 
 // UploadProjectFile uploads a new project file.
 //
 // The file requires a projectFileName, which is displayed, but also a fileName which includes the suffix. The fileName
 // is used for detecting the mimetype. The content of the file will be read from the `io.Reader r`.
-func (s *projectService) UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) HTTPStatus {
+func (s *projectService) UploadProjectFile(ctx context.Context, project Project, projectFileName, fileName string, transform *FileTransformation, r io.Reader) status.RexReturnCode {
 
 	b := new(bytes.Buffer)
 
@@ -138,7 +140,7 @@ func (s *projectService) UploadProjectFile(ctx context.Context, project Project,
 	json.NewEncoder(b).Encode(projectFile)
 	body, code, err := s.client.Post(ctx, s.resourceURL+apiProjectFiles, b, "application/json")
 	if err != nil {
-		return HTTPStatus{code, err.Error()}
+		return status.RexReturnCode{Code: code, Message: err.Error()}
 	}
 
 	// Upload the actual payload
@@ -146,7 +148,7 @@ func (s *projectService) UploadProjectFile(ctx context.Context, project Project,
 	return s.uploadFileContent(ctx, uploadURL, fileName, r)
 }
 
-func (s *projectService) uploadFileContent(ctx context.Context, uploadURL string, fileName string, r io.Reader) HTTPStatus {
+func (s *projectService) uploadFileContent(ctx context.Context, uploadURL string, fileName string, r io.Reader) status.RexReturnCode {
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -155,10 +157,10 @@ func (s *projectService) uploadFileContent(ctx context.Context, uploadURL string
 	writer.Close()
 
 	_, code, err := s.client.Post(ctx, uploadURL, body, writer.FormDataContentType())
-	return HTTPStatus{code, err.Error()}
+	return status.RexReturnCode{Code: code, Message: err.Error()}
 }
 
-func (s *projectService) createRexReference(ctx context.Context, r *RexReference) (string, HTTPStatus) {
+func (s *projectService) createRexReference(ctx context.Context, r *RexReference) (string, status.RexReturnCode) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
@@ -166,12 +168,12 @@ func (s *projectService) createRexReference(ctx context.Context, r *RexReference
 	body, code, err := s.client.Post(ctx, s.resourceURL+apiRexReferences, b, "application/json")
 
 	if err != nil {
-		return "", HTTPStatus{500, err.Error()}
+		return "", status.RexReturnCode{Code: 500, Message: err.Error()}
 	}
-	return gjson.Get(string(body), "_links.self.href").String(), HTTPStatus{Code: code}
+	return gjson.Get(string(body), "_links.self.href").String(), status.RexReturnCode{Code: code}
 }
 
-func (s *projectService) CreateProject(ctx context.Context, name, owner string) (*Project, HTTPStatus) {
+func (s *projectService) CreateProject(ctx context.Context, name, owner string) (*Project, status.RexReturnCode) {
 
 	project := struct {
 		Name  string `json:"name"`
@@ -185,16 +187,16 @@ func (s *projectService) CreateProject(ctx context.Context, name, owner string) 
 	json.NewEncoder(b).Encode(project)
 	body, code, err := s.client.Post(ctx, s.resourceURL+apiProjects, b, "application/json")
 	if err != nil {
-		return nil, HTTPStatus{code, err.Error()}
+		return nil, status.RexReturnCode{Code: code, Message: err.Error()}
 	}
 	if code != http.StatusCreated {
-		return nil, HTTPStatus{code, "rexOS did not return 201 http code"}
+		return nil, status.RexReturnCode{Code: code, Message: "rexOS did not return 201 http code"}
 	}
 
 	var newProject Project
 	err = json.Unmarshal(body, &newProject)
 	if err != nil {
-		return nil, HTTPStatus{http.StatusInternalServerError, "Cannot unmarshal created project"}
+		return nil, status.RexReturnCode{Code: http.StatusInternalServerError, Message: "Cannot unmarshal created project"}
 	}
 
 	projectSelfLink := gjson.Get(string(body), "_links.self.href").String()
@@ -212,21 +214,21 @@ func (s *projectService) CreateProject(ctx context.Context, name, owner string) 
 		// TODO delete project
 		return nil, ret
 	}
-	return &newProject, HTTPStatus{Code: http.StatusCreated}
+	return &newProject, status.RexReturnCode{Code: http.StatusCreated}
 }
 
 // CreateRexReference creates a new RexReference
-func (s *projectService) CreateRexReference(ctx context.Context, r RexReference) (string, HTTPStatus) {
+func (s *projectService) CreateRexReference(ctx context.Context, r RexReference) (string, status.RexReturnCode) {
 
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(r)
 
 	body, code, err := s.client.Post(ctx, s.resourceURL+apiRexReferences, b, "application/json")
 	if err != nil {
-		return "", HTTPStatus{code, err.Error()}
+		return "", status.RexReturnCode{Code: code, Message: err.Error()}
 	}
 	if code != 201 {
-		return "", HTTPStatus{Code: code}
+		return "", status.RexReturnCode{Code: code}
 	}
-	return gjson.Get(string(body), "_links.self.href").String(), HTTPStatus{Code: http.StatusCreated}
+	return gjson.Get(string(body), "_links.self.href").String(), status.RexReturnCode{Code: http.StatusCreated}
 }
