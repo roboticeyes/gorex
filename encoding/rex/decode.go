@@ -32,7 +32,8 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 		if err == io.EOF {
 			return header, file, nil
 		} else if err != nil {
-			return header, nil, err
+			fmt.Println("*************** FOUND UNEXPECTED FILE ENDING ***************")
+			return header, file, err
 		}
 
 		switch hdr.Type {

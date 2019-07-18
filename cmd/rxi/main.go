@@ -51,7 +51,7 @@ func openRexFile(rexFile string) {
 	r := bufio.NewReader(file)
 	d := rex.NewDecoder(r)
 	rexHeader, rexContent, err = d.Decode()
-	if err != nil {
+	if err != nil && err.Error() != "unexpected EOF" {
 		panic(err)
 	}
 }
