@@ -14,6 +14,7 @@ type File struct {
 	Meshes        []Mesh
 	Materials     []Material
 	Images        []Image
+	SceneNodes    []SceneNode
 	UnknownBlocks uint
 }
 
@@ -43,6 +44,11 @@ func (f *File) Header() *Header {
 	}
 
 	for _, b := range f.Images {
+		header.NrBlocks++
+		header.SizeBytes += (uint64)(b.GetSize())
+	}
+
+	for _, b := range f.SceneNodes {
 		header.NrBlocks++
 		header.SizeBytes += (uint64)(b.GetSize())
 	}

@@ -19,17 +19,20 @@ const (
 	typeMaterial         = 5
 	typePeopleSimulation = 6
 	typeUnityPackage     = 7
+	typeSceneNode        = 8
+	typeSceneGraph       = 9
 )
 
 // Header defines the structure of the REX header
 type Header struct {
-	Magic     [4]byte
-	Version   uint16
-	Crc       uint32
-	NrBlocks  uint16
-	StartAddr uint16
-	SizeBytes uint64
-	Reserved  [42]byte
+	Magic          [4]byte
+	Version        uint16
+	Crc            uint32
+	NrBlocks       uint16
+	StartAddr      uint16
+	SizeBytes      uint64
+	StartScenGraph uint64
+	Reserved       [34]byte
 }
 
 // DataBlockHeader stores the header information of a data block
@@ -43,11 +46,12 @@ type DataBlockHeader struct {
 // CreateHeader returns a valid fresh header block
 func CreateHeader() *Header {
 	header := &Header{
-		Version:   1,
-		Crc:       0,
-		NrBlocks:  0,
-		StartAddr: 86, // fixed CSB of 22 bytes
-		SizeBytes: 0,
+		Version:        1,
+		Crc:            0,
+		NrBlocks:       0,
+		StartAddr:      86, // fixed CSB of 22 bytes
+		SizeBytes:      0,
+		StartScenGraph: 0,
 	}
 	header.Magic[0] = 'R'
 	header.Magic[1] = 'E'
@@ -66,6 +70,7 @@ func (h *Header) Write(w io.Writer) error {
 		h.NrBlocks,
 		h.StartAddr,
 		h.SizeBytes,
+		h.StartScenGraph,
 		h.Reserved,
 		// default CSB block
 		uint32(3876),

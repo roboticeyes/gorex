@@ -204,6 +204,19 @@ func rexInfo(rexFile string) {
 		}
 	}
 
+	// SceneNodes
+	if len(rexContent.SceneNodes) > 0 {
+		fmt.Printf("SceneNodes (%d)\n", len(rexContent.SceneNodes))
+		fmt.Printf("%10s %14s %21s %28s %21s %s\n", "ID", "GeometryID", "Translation", "Rotation", "Scale", "Name")
+		for _, pl := range rexContent.SceneNodes {
+
+			fmt.Printf("%10d %14d [%+.2f, %+.2f, %+.2f] [%+.2f, %+.2f, %+.2f, %+.2f] [%+.2f, %+.2f, %+.2f] %s\n", pl.ID, pl.GeometryID,
+				pl.Translation.X(), pl.Translation.Y(), pl.Translation.Z(),
+				pl.Rotation.X(), pl.Rotation.Y(), pl.Rotation.Z(), pl.Rotation.W(),
+				pl.Scale.X(), pl.Scale.Y(), pl.Scale.Z(), pl.Name)
+		}
+	}
+
 	if rexContent.UnknownBlocks > 0 {
 		fmt.Printf("Unknown blocks (%d)\n", rexContent.UnknownBlocks)
 	}
