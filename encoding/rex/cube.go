@@ -5,20 +5,20 @@ import (
 )
 
 // NewCube returns a new cube with size (meters)
-func NewCube(size float32) (Mesh, Material) {
+func NewCube(id, matID uint64, size float32) (Mesh, Material) {
 
 	// default geometry is 2 meters
 	scale := size / 2.0
 
 	mesh := Mesh{
-		ID:         1,
+		ID:         id,
 		Name:       "Cube",
 		Coords:     getCoords(scale),
 		Triangles:  getTriangles(),
-		MaterialID: 2,
+		MaterialID: matID,
 	}
 
-	mat := NewMaterial(2)
+	mat := NewMaterial(matID)
 	mat.KdRgb = mgl32.Vec3{0.9, 0.7, 0.1}
 
 	return mesh, mat
