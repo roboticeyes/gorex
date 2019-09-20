@@ -13,22 +13,30 @@ const (
 	sceneNodeBlockVersion = 1
 )
 
-// SceneNode datastructure
+// SceneGraph describes the complete scenegraph tree with one root node
+type SceneGraph struct {
+	GUID string    `json:"guid,omitempty"`
+	Name string    `json:"name"`
+	Root SceneNode `json:"root"`
+}
+
+// SceneNode is a description of a scenegraph node and can reference a REX geometry block
 type SceneNode struct {
-	ID          uint64
-	GeometryID  uint64
-	Name        [32]byte
-	Translation mgl32.Vec3
-	Rotation    mgl32.Vec4
-	Scale       mgl32.Vec3
+	ID          uint64      `json:"id"`
+	GeometryID  uint64      `json:"geometryId"`
+	Name        string      `json:"name"`
+	Translation mgl32.Vec3  `json:"translation"`
+	Rotation    mgl32.Vec4  `json:"rotation"`
+	Scale       mgl32.Vec3  `json:"scale"`
+	Children    []SceneNode `json:"children,omitempty"` // not serialized to binary block!
 }
 
 // NewSceneNode creates a new empty SceneNode pointing to no geometry
-func NewSceneNode(id uint64) SceneNode {
+func NewSceneNode(id, geomID uint64, name string) SceneNode {
 	return SceneNode{
 		ID:          id,
-		GeometryID:  0,
-		Name:        [32]byte{},
+		GeometryID:  geomID,
+		Name:        name,
 		Translation: mgl32.Vec3{0.0, 0.0, 0.0},
 		Rotation:    mgl32.Vec4{0.0, 0.0, 0.0, 1.0},
 		Scale:       mgl32.Vec3{1.0, 1.0, 1.0},
@@ -57,7 +65,7 @@ func ReadSceneNode(r io.Reader, hdr DataBlockHeader) (*SceneNode, error) {
 	return &SceneNode{
 		ID:          hdr.ID,
 		GeometryID:  block.GeometryID,
-		Name:        block.Name,
+		Name:        string(block.Name[:]),
 		Translation: mgl32.Vec3{block.Tx, block.Ty, block.Tz},
 		Rotation:    mgl32.Vec4{block.Rx, block.Ry, block.Rz, block.Rw},
 		Scale:       mgl32.Vec3{block.Sx, block.Sy, block.Sz},
@@ -77,9 +85,12 @@ func (block *SceneNode) Write(w io.Writer) error {
 		return err
 	}
 
+	var name [32]byte
+	copy(name[:], block.Name)
+
 	var data = []interface{}{
 		uint64(block.GeometryID),
-		block.Name,
+		name,
 
 		float32(block.Translation.X()),
 		float32(block.Translation.Y()),
