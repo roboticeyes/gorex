@@ -33,11 +33,11 @@ actions:
   rxi -v                    prints version
   rxi help                  print this help
 
-  rxi info "file.rex"       show all REX blocks
-  rxi i "file.rex"          show all REX blocks
+  rxi "file.rex"            show all REX blocks
   rxi bbox "file.rex"       displays the bounding box of the rex file
 
   rxi img ID "file.rex"     extract the given image and dump it to stdout (pipe to a viewer, e.g. | feh -)
+  rxi mesh ID "file.rex"    extract the mesh block and dump it to stdout
 `
 
 // help prints the help text to stdout
@@ -70,6 +70,21 @@ func rexExtractImage(rexFile, idString string) {
 	for _, img := range rexContent.Images {
 		if img.ID == id {
 			binary.Write(os.Stdout, binary.LittleEndian, img.Data)
+		}
+	}
+}
+
+// dumps the mesh data block
+func rexShowMesh(rexFile, idString string) {
+	openRexFile(rexFile)
+	id, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, mesh := range rexContent.Meshes {
+		if mesh.ID == id {
+			fmt.Println(mesh)
 		}
 	}
 }
@@ -226,6 +241,12 @@ func main() {
 	if len(os.Args) == 1 {
 		help(0)
 	}
+
+	if _, err := os.Stat(os.Args[1]); err == nil {
+		rexInfo(os.Args[1])
+		return
+	}
+
 	action := os.Args[1]
 
 	switch action {
@@ -233,16 +254,14 @@ func main() {
 		help(0)
 	case "-v":
 		fmt.Printf("rxi v%s-%s\n", Version, Build)
-	case "info":
-		rexInfo(os.Args[2])
-	case "i":
-		rexInfo(os.Args[2])
 	case "bbox":
 		rexBbox(os.Args[2])
 	case "translate":
 		rexTranslate(os.Args[2], 2200, -125, 1800, "spring_infra.rex")
 	case "img":
 		rexExtractImage(os.Args[3], os.Args[2])
+	case "mesh":
+		rexShowMesh(os.Args[3], os.Args[2])
 	default:
 		help(1)
 	}

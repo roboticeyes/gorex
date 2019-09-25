@@ -236,12 +236,20 @@ func (m Mesh) String() string {
 	s += fmt.Sprintf("| # Triangle     | %-41d |\n", len(m.Triangles))
 	s += fmt.Sprintf("\n--- Coordinates\n\n")
 
-	for _, c := range m.Coords {
+	for i, c := range m.Coords {
 		s += fmt.Sprintf(" %5v \n", c)
+		if i > 100 {
+			s += fmt.Sprintf(" ... cutting off here ...\n")
+			break
+		}
 	}
 	s += fmt.Sprintf("\n--- Triangles\n\n")
-	for _, c := range m.Triangles {
+	for i, c := range m.Triangles {
 		s += fmt.Sprintf(" %5v \n", c)
+		if i > 100 {
+			s += fmt.Sprintf(" ... cutting off here ...\n")
+			break
+		}
 	}
 	s += fmt.Sprintf("|------------------------------------------------------------|\n")
 
