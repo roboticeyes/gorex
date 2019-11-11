@@ -27,7 +27,7 @@ type SceneNode struct {
 	Name        string      `json:"name"`
 	Translation mgl32.Vec3  `json:"translation"`
 	Rotation    mgl32.Vec4  `json:"rotation"`
-	Scale       mgl32.Vec3  `json:"scale"`
+	Scale       mgl32.Vec3  `json:"scale"`              // TODO scale is only one float !!!!
 	Children    []SceneNode `json:"children,omitempty"` // not serialized to binary block!
 }
 
