@@ -63,5 +63,13 @@ func (enc *Encoder) Encode(r File) error {
 		}
 	}
 
+	// Write SceneNodes
+	for _, i := range r.SceneNodes {
+		err = i.Write(enc.w)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

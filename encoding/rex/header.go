@@ -19,6 +19,7 @@ const (
 	typeMaterial         = 5
 	typePeopleSimulation = 6
 	typeUnityPackage     = 7
+	typeSceneNode        = 8
 )
 
 // Header defines the structure of the REX header

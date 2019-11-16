@@ -20,3 +20,5 @@ require (
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 )
+
+go 1.13

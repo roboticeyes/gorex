@@ -4,11 +4,13 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"os"
 	"strconv"
 
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/roboticeyes/gorex/encoding/rex"
 )
 
@@ -31,10 +33,11 @@ actions:
   rxi -v                    prints version
   rxi help                  print this help
 
-  rxi info "file.rex"       show all REX blocks
-  rxi i "file.rex"          show all REX blocks
+  rxi "file.rex"            show all REX blocks
+  rxi bbox "file.rex"       displays the bounding box of the rex file
 
   rxi img ID "file.rex"     extract the given image and dump it to stdout (pipe to a viewer, e.g. | feh -)
+  rxi mesh ID "file.rex"    extract the mesh block and dump it to stdout
 `
 
 // help prints the help text to stdout
@@ -69,6 +72,82 @@ func rexExtractImage(rexFile, idString string) {
 			binary.Write(os.Stdout, binary.LittleEndian, img.Data)
 		}
 	}
+}
+
+// dumps the mesh data block
+func rexShowMesh(rexFile, idString string) {
+	openRexFile(rexFile)
+	id, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, mesh := range rexContent.Meshes {
+		if mesh.ID == id {
+			fmt.Println(mesh)
+		}
+	}
+}
+
+func rexTranslate(rexFile string, x, y, z float32, output string) {
+	openRexFile(rexFile)
+	fmt.Println(rexHeader)
+
+	translate := mgl32.Vec3{x, y, z}
+
+	if len(rexContent.Meshes) > 0 {
+		for i := 0; i < len(rexContent.Meshes); i++ {
+			for j := 0; j < len(rexContent.Meshes[i].Coords); j++ {
+				rexContent.Meshes[i].Coords[j] = rexContent.Meshes[i].Coords[j].Add(translate)
+			}
+		}
+	}
+
+	// create new file
+	f, err := os.Create(output)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	var buf bytes.Buffer
+	e := rex.NewEncoder(&buf)
+	err = e.Encode(*rexContent)
+	if err != nil {
+		panic(err)
+	}
+	n, err := f.Write(buf.Bytes())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Successfully written %d bytes to file %s\n", n, output)
+
+}
+
+func rexBbox(rexFile string) {
+	openRexFile(rexFile)
+
+	fmt.Println(rexHeader)
+
+	bbmin := mgl32.Vec3{mgl32.MaxValue, mgl32.MaxValue, mgl32.MaxValue}
+	bbmax := mgl32.Vec3{mgl32.MinValue, mgl32.MinValue, mgl32.MinValue}
+
+	if len(rexContent.Meshes) > 0 {
+		for _, mesh := range rexContent.Meshes {
+			for _, c := range mesh.Coords {
+				for i := 0; i < 3; i++ {
+					if c[i] < bbmin[i] {
+						bbmin[i] = c[i]
+					}
+					if c[i] > bbmax[i] {
+						bbmax[i] = c[i]
+					}
+				}
+			}
+		}
+	}
+	fmt.Println("BoundingBox MIN: ", bbmin)
+	fmt.Println("BoundingBox MAX: ", bbmax)
 }
 
 func rexInfo(rexFile string) {
@@ -140,6 +219,19 @@ func rexInfo(rexFile string) {
 		}
 	}
 
+	// SceneNodes
+	if len(rexContent.SceneNodes) > 0 {
+		fmt.Printf("SceneNodes (%d)\n", len(rexContent.SceneNodes))
+		fmt.Printf("%10s %14s %21s %28s %21s %s\n", "ID", "GeometryID", "Translation", "Rotation", "Scale", "Name")
+		for _, pl := range rexContent.SceneNodes {
+
+			fmt.Printf("%10d %14d [%+.2f, %+.2f, %+.2f] [%+.2f, %+.2f, %+.2f, %+.2f] [%+.2f, %+.2f, %+.2f] %s\n", pl.ID, pl.GeometryID,
+				pl.Translation.X(), pl.Translation.Y(), pl.Translation.Z(),
+				pl.Rotation.X(), pl.Rotation.Y(), pl.Rotation.Z(), pl.Rotation.W(),
+				pl.Scale.X(), pl.Scale.Y(), pl.Scale.Z(), pl.Name)
+		}
+	}
+
 	if rexContent.UnknownBlocks > 0 {
 		fmt.Printf("Unknown blocks (%d)\n", rexContent.UnknownBlocks)
 	}
@@ -149,6 +241,12 @@ func main() {
 	if len(os.Args) == 1 {
 		help(0)
 	}
+
+	if _, err := os.Stat(os.Args[1]); err == nil {
+		rexInfo(os.Args[1])
+		return
+	}
+
 	action := os.Args[1]
 
 	switch action {
@@ -156,12 +254,14 @@ func main() {
 		help(0)
 	case "-v":
 		fmt.Printf("rxi v%s-%s\n", Version, Build)
-	case "info":
-		rexInfo(os.Args[2])
-	case "i":
-		rexInfo(os.Args[2])
+	case "bbox":
+		rexBbox(os.Args[2])
+	case "translate":
+		rexTranslate(os.Args[2], 2200, -125, 1800, "spring_infra.rex")
 	case "img":
 		rexExtractImage(os.Args[3], os.Args[2])
+	case "mesh":
+		rexShowMesh(os.Args[3], os.Args[2])
 	default:
 		help(1)
 	}

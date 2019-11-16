@@ -63,6 +63,11 @@ func (dec *Decoder) Decode() (*Header, *File, error) {
 			if err == nil {
 				file.Materials = append(file.Materials, *material)
 			}
+		case typeSceneNode:
+			sceneNode, err := ReadSceneNode(dec.r, hdr)
+			if err == nil {
+				file.SceneNodes = append(file.SceneNodes, *sceneNode)
+			}
 		default:
 			fmt.Printf("WARNING: Skipping type %d version %d sz %d id %d\n", hdr.Type, hdr.Version, hdr.Size, hdr.ID)
 			// Read block from reader and ignore
