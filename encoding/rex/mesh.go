@@ -243,6 +243,14 @@ func (m Mesh) String() string {
 			break
 		}
 	}
+	s += fmt.Sprintf("\n--- Colors\n\n")
+	for i, c := range m.Colors {
+		s += fmt.Sprintf(" %5v \n", c)
+		if i > 100 {
+			s += fmt.Sprintf(" ... cutting off here ...\n")
+			break
+		}
+	}
 	s += fmt.Sprintf("\n--- Triangles\n\n")
 	for i, c := range m.Triangles {
 		s += fmt.Sprintf(" %5v \n", c)
