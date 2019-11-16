@@ -38,6 +38,8 @@ actions:
 
   rxi img ID "file.rex"     extract the given image and dump it to stdout (pipe to a viewer, e.g. | feh -)
   rxi mesh ID "file.rex"    extract the mesh block and dump it to stdout
+
+  rxi scale <factor> "input.rex" "output.rex" scales all mesh vertices by the given factor (e.g. 0.001)
 `
 
 // help prints the help text to stdout
@@ -237,6 +239,30 @@ func rexInfo(rexFile string) {
 	}
 }
 
+func rexScaleVertices(factor float32, input, output string) {
+
+	openRexFile(input)
+
+	for _, m := range rexContent.Meshes {
+		for i := 0; i < len(m.Coords); i++ {
+			for j := 0; j < 3; j++ {
+				m.Coords[i][j] = m.Coords[i][j] * factor
+			}
+		}
+	}
+
+	var buf bytes.Buffer
+	e := rex.NewEncoder(&buf)
+	err := e.Encode(*rexContent)
+	if err != nil {
+		panic(err)
+	}
+
+	f, _ := os.Create(output)
+	f.Write(buf.Bytes())
+	defer f.Close()
+}
+
 func main() {
 	if len(os.Args) == 1 {
 		help(0)
@@ -262,6 +288,12 @@ func main() {
 		rexExtractImage(os.Args[3], os.Args[2])
 	case "mesh":
 		rexShowMesh(os.Args[3], os.Args[2])
+	case "scale":
+		factor, err := strconv.ParseFloat(os.Args[2], 64)
+		if err != nil {
+			panic(err)
+		}
+		rexScaleVertices(float32(factor), os.Args[3], os.Args[4])
 	default:
 		help(1)
 	}
