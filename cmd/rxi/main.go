@@ -38,6 +38,7 @@ actions:
 
   rxi img ID "file.rex"     extract the given image and dump it to stdout (pipe to a viewer, e.g. | feh -)
   rxi mesh ID "file.rex"    extract the mesh block and dump it to stdout
+  rxi lines ID "file.rex"   extract the lineset block and dump it to stdout
 
   rxi scale <factor> "input.rex" "output.rex" scales all mesh vertices by the given factor (e.g. 0.001)
 `
@@ -87,6 +88,24 @@ func rexShowMesh(rexFile, idString string) {
 	for _, mesh := range rexContent.Meshes {
 		if mesh.ID == id {
 			fmt.Println(mesh)
+		}
+	}
+}
+
+// dumps the lineset data blocks
+func rexShowLines(rexFile, idString string) {
+	openRexFile(rexFile)
+	id, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, lineset := range rexContent.LineSets {
+		if lineset.ID == id {
+			for _, p := range lineset.Points {
+				fmt.Printf("v %5.2f %5.2f %5.2f\n", p[0], p[1], p[2])
+
+			}
 		}
 	}
 }
@@ -288,6 +307,8 @@ func main() {
 		rexExtractImage(os.Args[3], os.Args[2])
 	case "mesh":
 		rexShowMesh(os.Args[3], os.Args[2])
+	case "lines":
+		rexShowLines(os.Args[3], os.Args[2])
 	case "scale":
 		factor, err := strconv.ParseFloat(os.Args[2], 64)
 		if err != nil {
