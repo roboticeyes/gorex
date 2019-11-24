@@ -157,7 +157,10 @@ func (s *projectService) uploadFileContent(ctx context.Context, uploadURL string
 	writer.Close()
 
 	_, code, err := s.client.Post(ctx, uploadURL, body, writer.FormDataContentType())
-	return status.RexReturnCode{Code: code, Message: err.Error()}
+	if err != nil {
+		return status.RexReturnCode{Code: code, Message: err.Error()}
+	}
+	return status.RexReturnCode{Code: code}
 }
 
 func (s *projectService) createRexReference(ctx context.Context, r *RexReference) (string, status.RexReturnCode) {
