@@ -100,7 +100,7 @@ func (s *projectService) UploadProjectFile(ctx context.Context, project Project,
 		RootReference:   false,
 		ParentReference: parentReferenceURL,
 		Key:             uuid,
-		FileTransform:   transform,
+		// FileTransform:   transform,
 	}
 
 	// Only create project rex reference if no one exists yet
@@ -212,11 +212,13 @@ func (s *projectService) CreateProject(ctx context.Context, name, owner string) 
 		Key:           uuid,
 	}
 
-	_, ret := s.CreateRexReference(ctx, rexReference)
+	referenceLink, ret := s.CreateRexReference(ctx, rexReference)
 	if ret.Code != http.StatusCreated {
 		// TODO delete project
 		return nil, ret
 	}
+
+	newProject.Embedded.RootRexReference.Links.Self.Href = referenceLink
 	return &newProject, status.RexReturnCode{Code: http.StatusCreated}
 }
 

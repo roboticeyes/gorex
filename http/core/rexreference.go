@@ -11,7 +11,7 @@ type RexReference struct {
 	Address         *ProjectAddress        `json:"address"`
 	AbsTransform    *ProjectTransformation `json:"absoluteTransformation"`
 	RelTransform    *ProjectTransformation `json:"relativeTransformation"`
-	FileTransform   *FileTransformation    `json:"fileTransformation"`
+	FileTransform   *FileTransformation    `json:"fileTransformation,omitempty"`
 }
 
 // ProjectTransformation is used for the absoluteTransformation as well as for the relativeTransformation of a RexReference
