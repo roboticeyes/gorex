@@ -40,6 +40,7 @@ actions:
   rxc users ls              get all registered users
   rxc users show self_link  shows the details of the user by the given self link
   rxc users rm self_link    remove a certain user with the given self link
+  rxc wipe list.csv         remove all projects where the ID is in the list.csv file
 `
 
 const (
@@ -259,6 +260,35 @@ func onSocketClusterAuthentication(client scclient.Client, isAuthenticated bool)
 	})
 }
 
+func wipeProjects(listFile string) {
+
+	client := rexos.NewClient()
+	base := "https://api-test.rexos.cloud/rex-gateway/api/v2/projects/"
+
+	file, err := os.Open(listFile)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		id := scanner.Text()
+		query := base + id
+		fmt.Print("Deleting project ... ", query)
+		err := client.Delete(ctx, query)
+		if err != nil {
+			fmt.Println(" failed - ", err)
+		} else {
+			fmt.Println(" success")
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		panic(err)
+	}
+}
+
 func listenProject(projectName string) {
 	var reader scanner.Scanner
 	var err error
@@ -402,6 +432,9 @@ func main() {
 	case "users":
 		authenticate()
 		handleUsers(os.Args[2])
+	case "wipe":
+		authenticate()
+		wipeProjects(os.Args[2])
 	case "ls":
 		switch commandArgs {
 		case 0:

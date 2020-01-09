@@ -108,9 +108,16 @@ func (c *Client) Delete(ctx context.Context, link string) error {
 		return fmt.Errorf("Missing token in context")
 	}
 
-	req, _ := http.NewRequest("DELETE", link, nil)
+	req, err := http.NewRequest("DELETE", link, nil)
+
+	if err != nil {
+		log.Error("Cannot create request:", err)
+		return err
+	}
+
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
 	req.Header.Add("authorization", authKey)
+	req.Header.Add("Accept", "application/json")
 	resp, err := c.httpClient.Do(req)
 
 	if err != nil {
@@ -122,6 +129,10 @@ func (c *Client) Delete(ctx context.Context, link string) error {
 		io.Copy(ioutil.Discard, resp.Body)
 	}()
 
-	_, err = ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		log.Error(err, ": ", string(body))
+	}
+
 	return err
 }
