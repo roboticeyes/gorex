@@ -1,14 +1,11 @@
-[![Godoc Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/roboticeyes/gorex)
-[![Build Status](https://travis-ci.org/roboticeyes/gorex.svg)](https://travis-ci.org/roboticeyes/gorex)
-[![Go Report Card](https://goreportcard.com/badge/github.com/roboticeyes/gorex)](https://goreportcard.com/report/github.com/roboticeyes/gorex)
+# ATTENTION DEPRECATED !!!
 
-<p align="center">
-  <img style="float: right;" src="assets/rex-go.png" alt="goREX logo"/>
-</p>
+This repository is soon deprecated. Please use our new modules:
 
-# IMPORTANT
+* [GoRexFile](https://github.com/roboticeyes/gorexfile)
+* [GoRexClient](https://github.com/roboticeyes/gorexclient)
 
-The gorex REST client implementation is currently under heavy development. Please keep in mind that interfaces may change, and code gets refactored. If you want to use gorex in your production code, please contact support@robotic-eyes.com.
+If you want to use gorex in your production code, please contact support@robotic-eyes.com.
 
 # gorex
 
