@@ -39,7 +39,8 @@ actions:
   rxi img ID "file.rex"     extract the given image and dump it to stdout (pipe to a viewer, e.g. | feh -)
   rxi mesh ID "file.rex"    extract the mesh block and dump it to stdout
   rxi lines ID "file.rex"   extract the lineset block and dump it to stdout
-
+  rxi tracks ID "file.rex"   extract the track block and dump it to stdout
+  
   rxi scale <factor> "input.rex" "output.rex" scales all mesh vertices by the given factor (e.g. 0.001)
 `
 
@@ -94,6 +95,7 @@ func rexShowMesh(rexFile, idString string) {
 
 // dumps the lineset data blocks
 func rexShowLines(rexFile, idString string) {
+	// dumps the track data blocks
 	openRexFile(rexFile)
 	id, err := strconv.ParseUint(idString, 10, 64)
 	if err != nil {
@@ -104,7 +106,26 @@ func rexShowLines(rexFile, idString string) {
 		if lineset.ID == id {
 			for _, p := range lineset.Points {
 				fmt.Printf("v %5.2f %5.2f %5.2f\n", p[0], p[1], p[2])
+			}
+		}
+	}
+}
 
+// dumps the track data blocks
+func rexShowTracks(rexFile, idString string) {
+	openRexFile(rexFile)
+	id, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, track := range rexContent.Tracks {
+		if track.ID == id {
+			fmt.Printf("Number of points %d\n", track.NrOfPoints)
+			for _, elem := range track.Points {
+				fmt.Printf("v %5.2f %5.2f %5.2f\n", elem.Point[0], elem.Point[1], elem.Point[2])
+				fmt.Printf("n %5.2f %5.2f %5.2f\n", elem.NormalVec[0], elem.NormalVec[1], elem.NormalVec[2])
+				fmt.Printf("c %5.2f\n\n", elem.Confidence)
 			}
 		}
 	}
@@ -253,6 +274,15 @@ func rexInfo(rexFile string) {
 		}
 	}
 
+	// Track
+	if len(rexContent.Tracks) > 0 {
+		fmt.Printf("Tracks (%d)\n", len(rexContent.Tracks))
+		fmt.Printf("%10s %8s\n", "ID", "#Points")
+		for _, t := range rexContent.Tracks {
+			fmt.Printf("%10d %8d\n", t.ID, len(t.Points))
+		}
+	}
+
 	if rexContent.UnknownBlocks > 0 {
 		fmt.Printf("Unknown blocks (%d)\n", rexContent.UnknownBlocks)
 	}
@@ -309,6 +339,8 @@ func main() {
 		rexShowMesh(os.Args[3], os.Args[2])
 	case "lines":
 		rexShowLines(os.Args[3], os.Args[2])
+	case "tracks":
+		rexShowTracks(os.Args[3], os.Args[2])
 	case "scale":
 		factor, err := strconv.ParseFloat(os.Args[2], 64)
 		if err != nil {

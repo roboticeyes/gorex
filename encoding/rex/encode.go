@@ -71,5 +71,13 @@ func (enc *Encoder) Encode(r File) error {
 		}
 	}
 
+	// Write Tracks
+	for _, t := range r.Tracks {
+		err = t.Write(enc.w)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

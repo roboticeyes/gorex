@@ -35,18 +35,18 @@ func (block *Track) GetSize() int {
 
 // ReadTrack reads a REX track
 func ReadTrack(r io.Reader, hdr DataBlockHeader) (*Track, error) {
-	var nrPoints uint32
 	var track Track
 
-	if err := binary.Read(r, binary.LittleEndian, &nrPoints); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &track.NrOfPoints); err != nil {
 		return nil, fmt.Errorf("Reading failed: %v ", err)
 	}
+	// track.NrOfPoints = nrOfPoints
 
 	if err := binary.Read(r, binary.LittleEndian, &track.Timestamp); err != nil {
 		return nil, fmt.Errorf("Reading failed: %v ", err)
 	}
 
-	track.Points = make([]TrackElement, nrPoints)
+	track.Points = make([]TrackElement, track.NrOfPoints)
 	if err := binary.Read(r, binary.LittleEndian, &track.Points); err != nil {
 		return nil, fmt.Errorf("Reading coords failed: %v", err)
 	}
@@ -97,6 +97,7 @@ func (block *Track) Write(w io.Writer) error {
 		}
 
 		// normalize normal vector
+		p.NormalVec = p.NormalVec.Normalize()
 
 		err = binary.Write(w, binary.LittleEndian, p.NormalVec.X())
 		if err != nil {
