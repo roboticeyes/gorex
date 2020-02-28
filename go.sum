@@ -12,7 +12,6 @@ github.com/gdamore/tcell v1.1.2 h1:Afe8cU6SECC06UmvaJ55Jr3Eh0tz/ywLjqWYqjGZp3s=
 github.com/gdamore/tcell v1.1.2/go.mod h1:h3kq4HO9l2On+V9ed8w8ewqQEmGCSSHOgQ+2h8uzurE=
 github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a h1:2n5w2v3knlspzjJWyQPC0j88Mwvq0SZV0Jdws34GJwc=
 github.com/go-gl/mathgl v0.0.0-20180804195959-cdf14b6b8f8a/go.mod h1:dvrdneKbyWbK2skTda0nM4B9zSlS2GZSnjX7itr/skQ=
-github.com/go-gl/mathgl v0.0.0-20190713194549-592312d8590a h1:yoAEv7yeWqfL/l9A/J5QOndXIJCldv+uuQB1DSNQbS0=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/uuid v1.1.0 h1:Jf4mxPC/ziBnoPIdpQdPJ9OeiomAUHLvxmPRSPH9m4s=
