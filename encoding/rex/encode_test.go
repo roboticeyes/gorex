@@ -40,6 +40,27 @@ func TestEncodingPointList(t *testing.T) {
 	}
 }
 
+func TestEncodingTrack(t *testing.T) {
+
+	track := Track{ID: 0}
+
+	elem := TrackElement{Point: mgl32.Vec3{0.0, 0.0, 0.0}, NormalVec: mgl32.Vec3{1.0, 1.0, 1.0}, Confidence: 1.0}
+	track.Points = append(track.Points, elem)
+	track.Points = append(track.Points, mgl32.Vec3{1.0, 1.0, 0.0})
+	track.Points = append(track.Points, mgl32.Vec3{0.0, 1.0, 1.0})
+	track.Points = append(track.Points, mgl32.Vec3{0.0, 1.0, 1.0})
+
+	rexFile := File{}
+	rexFile.PointLists = append(rexFile.PointLists, pl)
+
+	var buf bytes.Buffer
+	e := NewEncoder(&buf)
+	err := e.Encode(rexFile)
+	if err != nil {
+		t.Fatalf("TEST ERROR: %v", err)
+	}
+}
+
 func TestEncodingMesh(t *testing.T) {
 
 	mesh := Mesh{ID: 1, MaterialID: 0, Name: "test"}
